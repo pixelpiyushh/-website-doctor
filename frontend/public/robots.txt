@@ -1,0 +1,10 @@
+# robots.txt for Website Doctor
+# https://websitedoctor.local / public production host
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /events
+
+# Sitemap location
+Sitemap: /sitemap.xml

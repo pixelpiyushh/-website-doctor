@@ -1,0 +1,24 @@
+{
+  "name": "website-doctor",
+  "version": "1.0.0",
+  "description": "Website Doctor — AI-Powered Real-Time Website Monitoring & Health Analysis Platform",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "start": "node backend/dist/server.js",
+    "test": "npm --prefix backend test"
+  },
+  "keywords": [
+    "uptime-monitoring",
+    "website-health",
+    "synthetic-monitoring",
+    "ssl-checker",
+    "ai-diagnosis"
+  ],
+  "author": "Piyush Raj",
+  "license": "MIT"
+}
