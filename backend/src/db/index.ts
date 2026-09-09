@@ -1,4 +1,3 @@
-import { PGlite } from '@electric-sql/pglite';
 import pg from 'pg';
 import path from 'path';
 import fs from 'fs';
@@ -14,11 +13,11 @@ let dbInstance: DBClient | null = null;
 export async function getDB(): Promise<DBClient> {
   if (dbInstance) return dbInstance;
 
+  // 1. External PostgreSQL (via DATABASE_URL, e.g. Supabase, Neon, Render Postgres)
   if (CONFIG.databaseUrl) {
     try {
       console.log('Connecting to PostgreSQL database via DATABASE_URL...');
       const pool = new pg.Pool({ connectionString: CONFIG.databaseUrl });
-      // test connection
       await pool.query('SELECT 1');
       console.log('Successfully connected to external PostgreSQL database.');
       dbInstance = {
@@ -33,27 +32,47 @@ export async function getDB(): Promise<DBClient> {
       await initSchema(dbInstance);
       return dbInstance;
     } catch (err: any) {
-      console.warn(`Could not connect to external PostgreSQL (${err.message}). Falling back to embedded PGlite.`);
+      console.warn(`Could not connect to external PostgreSQL (${err.message}). Falling back to embedded engine.`);
     }
   }
 
-  console.log('Initializing embedded PostgreSQL (PGlite) engine...');
-  const dataDir = path.resolve(process.cwd(), 'data/pgdata');
+  // 2. Ultra-lightweight Embedded Database (Node.js native SQLite - uses <10MB RAM, zero WASM bloat)
+  console.log('Initializing lightweight embedded database engine (native SQLite)...');
+  const dataDir = path.resolve(process.cwd(), 'data');
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
 
-  const pglite = new PGlite(dataDir);
-  await pglite.waitReady;
-  console.log('Embedded PostgreSQL engine ready with persistent storage at:', dataDir);
+  const dbFile = path.join(dataDir, 'website_doctor.db');
+  const { DatabaseSync } = await import('node:sqlite');
+  const sqlite = new DatabaseSync(dbFile);
+  console.log('Lightweight embedded database ready with persistent storage at:', dbFile);
 
   dbInstance = {
     query: async (text: string, params?: any[]) => {
-      const res = await pglite.query(text, params);
-      return { rows: res.rows, rowCount: res.rows.length };
+      // Map PostgreSQL parameter syntax ($1, $2) to SQLite syntax (?1, ?2)
+      const sqliteText = text.replace(/\$(\d+)/g, '?$1');
+      const isRead = /^\s*(SELECT|PRAGMA)/i.test(sqliteText) || /RETURNING/i.test(sqliteText);
+      const stmt = sqlite.prepare(sqliteText);
+
+      // Normalize parameters (boolean to 1/0, undefined to null)
+      const cleanParams = (params || []).map((p) => {
+        if (typeof p === 'boolean') return p ? 1 : 0;
+        if (p === undefined) return null;
+        return p;
+      });
+
+      if (isRead) {
+        const rawRows = cleanParams.length ? stmt.all(...cleanParams) : stmt.all();
+        const rows = (rawRows as any[]).map((row) => ({ ...row }));
+        return { rows, rowCount: rows.length };
+      } else {
+        const info = cleanParams.length ? stmt.run(...cleanParams) : stmt.run();
+        return { rows: [], rowCount: Number(info.changes) };
+      }
     },
     exec: async (sql: string) => {
-      await pglite.exec(sql);
+      sqlite.exec(sql);
     },
   };
 

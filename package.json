@@ -9,7 +9,7 @@
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "build:frontend": "npm --prefix frontend run build",
     "build:backend": "npm --prefix backend run build",
-    "start": "node backend/dist/server.js",
+    "start": "node --max-old-space-size=384 backend/dist/server.js",
     "test": "npm --prefix backend test"
   },
   "keywords": [
