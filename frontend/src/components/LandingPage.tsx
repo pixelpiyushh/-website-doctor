@@ -121,15 +121,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
         <h1
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2.5rem, 5.5vw, 4.2rem)',
+            fontSize: 'clamp(2.4rem, 5.5vw, 4.2rem)',
             fontWeight: 800,
             lineHeight: 1.15,
             letterSpacing: '-0.03em',
             marginBottom: '18px',
           }}
         >
-          Diagnose your website <br />
-          <span className="gradient-text">before your users do.</span>
+          Website Doctor — <br />
+          <span className="gradient-text">Know Your Website's Health</span>
         </h1>
 
         <p
@@ -141,7 +141,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
             lineHeight: 1.55,
           }}
         >
-          Real-time website health monitoring, performance latency analytics, SSL certificate inspection, broken link detection, and intelligent clinical diagnostics — all in one unified platform.
+          Enter any public URL to execute real-time availability testing, SSL inspection, security header verification, and automated clinical AI diagnostics in seconds.
         </p>
 
         {/* Hero URL Input Form */}
@@ -150,7 +150,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
           style={{
             display: 'flex',
             gap: '10px',
-            maxWidth: '620px',
+            maxWidth: '640px',
             margin: '0 auto 20px',
             flexWrap: 'wrap',
           }}
@@ -175,7 +175,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
             />
           </div>
           <button type="submit" className="btn btn-primary btn-lg" style={{ flex: '1 1 180px' }}>
-            <span>Check My Website</span>
+            <span>Analyze Website</span>
             <ArrowRight size={16} />
           </button>
         </form>

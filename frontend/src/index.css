@@ -717,18 +717,91 @@ body {
     position: fixed;
     transform: translateX(-100%);
     width: 280px;
+    z-index: 100;
   }
   .sidebar.open {
     transform: translateX(0);
   }
   .grid-4, .grid-3, .grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 14px;
   }
   .page-content {
-    padding: 16px;
+    padding: 12px;
   }
   .top-navbar {
-    padding: 0 16px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .top-navbar-right {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .top-navbar-left {
+    gap: 6px;
+  }
+  .card {
+    padding: 16px;
+  }
+  .stat-card {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.35rem;
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .btn-lg {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+  .lang-switcher button {
+    padding: 2px 6px;
+    font-size: 0.68rem;
+  }
+  .modal-content {
+    width: 95vw;
+    margin: 10px auto;
+  }
+}
+
+/* Executive PDF Report Print Stylesheet */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+  .sidebar, .top-navbar, .modal-header button, .modal-footer, .lang-switcher, .cosmic-mesh-bg {
+    display: none !important;
+  }
+  .modal-overlay {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+  .modal-content {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+  }
+  .print-area {
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  .card, .stat-card {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    break-inside: avoid;
   }
 }
 
@@ -980,3 +1053,173 @@ body {
   box-shadow: 0 8px 30px rgba(192, 132, 252, 0.15), 0 0 15px rgba(56, 189, 248, 0.1);
   transform: translateY(-2px);
 }
+
+/* Pulse animation for DOWN alert banner */
+@keyframes pulse-down-alert {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.35);
+    border-color: rgba(244, 63, 94, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(244, 63, 94, 0.65);
+    border-color: rgba(244, 63, 94, 1);
+  }
+}
+
+/* ==========================================================================
+   Mobile Responsive System (Item 9)
+   Ensures cards, graphs, navigation and forms stack cleanly on phones & tablets
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 270px;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .page-content {
+    padding: 16px 12px;
+  }
+
+  .grid-4,
+  .grid-3,
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-header > div:last-child {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .top-navbar {
+    padding: 10px 14px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-card-value {
+    font-size: 1.5rem;
+  }
+
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 10px auto;
+    padding: 16px;
+  }
+
+  /* Stack URL analyzer input & buttons */
+  form {
+    flex-direction: column !important;
+  }
+
+  form .btn,
+  form .input-group {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.35rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .stat-card-value {
+    font-size: 1.35rem;
+  }
+
+  .btn-lg {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+
+  .top-navbar-right {
+    gap: 6px;
+  }
+
+  /* Ensure radar scanner is sized nicely on small screens */
+  .radar-scanner-wrapper {
+    width: 110px;
+    height: 110px;
+  }
+}
+
+/* ==========================================================================
+   Print / PDF Generation Styles (Item 8)
+   Optimized for "Generate PDF Report" clean monochrome & color exports
+   ========================================================================== */
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .sidebar,
+  .top-navbar,
+  .modal-overlay,
+  .btn,
+  .cosmic-mesh-bg,
+  header,
+  aside,
+  button {
+    display: none !important;
+  }
+
+  .print-area {
+    display: block !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .print-area * {
+    color: #111827 !important;
+    background: transparent !important;
+    border-color: #e5e7eb !important;
+    box-shadow: none !important;
+  }
+}
+

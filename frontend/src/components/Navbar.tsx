@@ -45,6 +45,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Menu size={18} />
         </button>
 
+        <button
+          className="btn btn-ghost btn-sm"
+          onClick={() => setActiveView('landing')}
+          style={{ padding: '4px 8px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '5px' }}
+          title="Return to Landing Page Homepage"
+        >
+          <span>🏠</span>
+          <span style={{ fontWeight: 600 }}>Home</span>
+        </button>
+
         {/* Live SSE status indicator */}
         <div
           className="badge"

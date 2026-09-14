@@ -9,6 +9,14 @@ export interface SEOIssue {
   recommendation: string;
 }
 
+export interface SEOCheckItem {
+  key: string;
+  name: string;
+  status: 'pass' | 'warning' | 'fail';
+  detail: string;
+  recommendation?: string;
+}
+
 export interface SEOReport {
   score: number;
   title?: string;
@@ -30,6 +38,7 @@ export interface SEOReport {
   ogImage?: string;
   hasSitemap: boolean;
   hasRobotsTxt: boolean;
+  checklist: SEOCheckItem[];
   issues: SEOIssue[];
 }
 
@@ -81,6 +90,7 @@ export async function analyzeSEO(html: string, pageUrl: string): Promise<SEORepo
       hasOpenGraph: false,
       hasSitemap: false,
       hasRobotsTxt: false,
+      checklist: [],
       issues: [
         {
           type: 'critical',
@@ -247,6 +257,65 @@ export async function analyzeSEO(html: string, pageUrl: string): Promise<SEORepo
     });
   }
 
+  const checklist: SEOCheckItem[] = [
+    {
+      key: 'title',
+      name: 'Meta Title',
+      status: !title ? 'fail' : titleLength < 20 || titleLength > 70 ? 'warning' : 'pass',
+      detail: title ? `${title} (${titleLength} chars)` : 'Missing <title> tag',
+      recommendation: !title ? 'Add a unique <title> tag between 30 and 60 characters.' : undefined,
+    },
+    {
+      key: 'metaDescription',
+      name: 'Meta Description',
+      status: !metaDescription ? 'fail' : metaDescriptionLength < 70 || metaDescriptionLength > 170 ? 'warning' : 'pass',
+      detail: metaDescription ? `${metaDescription.slice(0, 65)}... (${metaDescriptionLength} chars)` : 'Missing <meta name="description"> tag',
+      recommendation: !metaDescription ? 'Add a concise meta description between 120 and 160 characters.' : undefined,
+    },
+    {
+      key: 'headings',
+      name: 'Heading Hierarchy (H1/H2/H3)',
+      status: h1Count === 1 ? 'pass' : h1Count === 0 ? 'fail' : 'warning',
+      detail: `H1: ${h1Count}, H2: ${h2Count}, H3: ${h3Count}`,
+      recommendation: h1Count === 0 ? 'Add exactly one primary <h1> tag.' : h1Count > 1 ? 'Keep only 1 primary <h1> tag.' : undefined,
+    },
+    {
+      key: 'sitemap',
+      name: 'XML Sitemap (/sitemap.xml)',
+      status: hasSitemap ? 'pass' : 'fail',
+      detail: hasSitemap ? 'Valid XML sitemap detected' : 'No /sitemap.xml found at standard location',
+      recommendation: !hasSitemap ? 'Generate an XML sitemap and submit to Google Search Console.' : undefined,
+    },
+    {
+      key: 'robotsTxt',
+      name: 'Robots.txt (/robots.txt)',
+      status: hasRobotsTxt ? 'pass' : 'fail',
+      detail: hasRobotsTxt ? 'Valid robots.txt file detected' : 'No /robots.txt file detected',
+      recommendation: !hasRobotsTxt ? 'Create a robots.txt file in the root directory.' : undefined,
+    },
+    {
+      key: 'imageAlt',
+      name: 'Image Alt Text',
+      status: imagesMissingAlt === 0 ? 'pass' : imagesMissingAlt > 3 ? 'fail' : 'warning',
+      detail: `${totalImages - imagesMissingAlt} of ${totalImages} images have descriptive alt text`,
+      recommendation: imagesMissingAlt > 0 ? `Add alt attributes to ${imagesMissingAlt} uncaptioned images.` : undefined,
+    },
+    {
+      key: 'viewport',
+      name: 'Mobile Viewport',
+      status: viewport ? 'pass' : 'fail',
+      detail: viewport ? 'Mobile viewport tag configured' : 'Missing mobile viewport meta tag',
+      recommendation: !viewport ? 'Add <meta name="viewport" content="width=device-width, initial-scale=1.0">.' : undefined,
+    },
+    {
+      key: 'openGraph',
+      name: 'Open Graph Social Cards',
+      status: hasOpenGraph ? 'pass' : 'warning',
+      detail: hasOpenGraph ? 'og:title / og:image tags present' : 'Missing Open Graph preview tags',
+      recommendation: !hasOpenGraph ? 'Add og:title and og:image tags for rich social sharing previews.' : undefined,
+    },
+  ];
+
   return {
     score: Math.max(0, Math.min(100, score)),
     title,
@@ -268,6 +337,7 @@ export async function analyzeSEO(html: string, pageUrl: string): Promise<SEORepo
     ogImage,
     hasSitemap,
     hasRobotsTxt,
+    checklist,
     issues,
   };
 }

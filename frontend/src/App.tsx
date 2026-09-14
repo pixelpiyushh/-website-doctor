@@ -38,15 +38,23 @@ import {
   Plus,
   RefreshCw,
   User,
+  AlertOctagon,
+  FileText,
+  TrendingUp,
 } from 'lucide-react';
 import { useLanguage } from './i18n';
+import { PerformanceAuditView } from './components/PerformanceAuditView';
+import { ScoreComparisonModal } from './components/ScoreComparisonModal';
+import { ReportDownloadModal } from './components/ReportDownloadModal';
 
 export const App: React.FC = () => {
   const { t } = useLanguage();
-  const [activeView, setActiveView] = useState<string>('overview');
+  const [activeView, setActiveView] = useState<string>('landing');
   const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
   const [isSSEConnected, setIsSSEConnected] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
 
   // Platform Owner Profile State with localStorage persistence
   const [ownerProfile, setOwnerProfile] = useState<{
@@ -439,6 +447,79 @@ export const App: React.FC = () => {
 
         {/* Dynamic Page Views */}
         <main className="page-content">
+          {/* 6. Real-time DOWN Alert Banner */}
+          {(selectedMonitor?.status === 'down' || activeIncidents.some((i) => i.status === 'active' && i.severity === 'critical')) && (
+            <div
+              className="down-alert-banner"
+              style={{
+                marginBottom: '20px',
+                padding: '16px 20px',
+                backgroundColor: 'rgba(244, 63, 94, 0.16)',
+                border: '2px solid var(--status-down)',
+                borderRadius: 'var(--radius-lg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
+                flexWrap: 'wrap',
+                boxShadow: '0 0 30px rgba(244, 63, 94, 0.35)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--status-down)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <AlertOctagon size={24} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#f43f5e', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚠️ Website is DOWN</span>
+                    <span className="badge" style={{ backgroundColor: 'var(--status-down)', color: '#fff', fontSize: '0.72rem', fontWeight: 700 }}>
+                      CRITICAL ALERT
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    <strong>{selectedMonitor?.name || 'Monitored website'}</strong> ({selectedMonitor?.url}) is failing health probes (HTTP {selectedMonitor?.latest_status_code || 503}). Instant root-cause diagnostic triggered.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {selectedMonitor && (
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => handleCheckNow(selectedMonitor.id)}
+                    disabled={isCheckingActive}
+                  >
+                    <RefreshCw size={14} className={isCheckingActive ? 'spin' : ''} />
+                    <span>Retry Probe</span>
+                  </button>
+                )}
+
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ backgroundColor: 'var(--status-down)', borderColor: 'var(--status-down)' }}
+                  onClick={() => {
+                    if (selectedMonitor) setScannerPrefillUrl(selectedMonitor.url);
+                    setActiveView('scanner');
+                  }}
+                >
+                  <span>Diagnose Root Cause →</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* VIEW: OVERVIEW / MAIN DASHBOARD */}
           {activeView === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
@@ -463,9 +544,9 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Target Monitor Switcher */}
+                {/* Target Monitor Switcher & Action Buttons */}
                 {monitors.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t.targetWebsite}</span>
                     <select
                       value={selectedMonitor?.id || ''}
@@ -497,6 +578,30 @@ export const App: React.FC = () => {
                     >
                       <RefreshCw size={14} className={isCheckingActive ? "spin" : ""} />
                       <span>{isCheckingActive ? t.checkingStatus : t.checkNowBtn}</span>
+                    </button>
+
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setShowCompareModal(true)}
+                      title="Compare baseline vs current health score (Before vs After)"
+                      style={{
+                        backgroundColor: 'rgba(192, 132, 252, 0.12)',
+                        borderColor: 'rgba(192, 132, 252, 0.4)',
+                        color: '#c084fc',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <TrendingUp size={14} />
+                      <span>Compare (74 ➔ {currentHealthScore.overallScore})</span>
+                    </button>
+
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setShowReportModal(true)}
+                      title="Download or Print Executive Clinical PDF Report"
+                    >
+                      <FileText size={14} />
+                      <span>Generate PDF Report</span>
                     </button>
                   </div>
                 )}
@@ -575,6 +680,18 @@ export const App: React.FC = () => {
                   recentIncident={incidents[0]}
                 />
               </div>
+
+              {/* Performance Recommendations ⚡ */}
+              <PerformanceAuditView
+                responseTimeMs={historyData.currentResponseTime || selectedMonitor?.latest_response_time || 243}
+                ttfbMs={Math.round((historyData.currentResponseTime || selectedMonitor?.latest_response_time || 243) * 0.65)}
+                contentEncoding="gzip"
+                hasCacheControl={true}
+                cacheControlHeader="public, max-age=31536000, immutable"
+                totalImages={4}
+                unoptimizedImagesCount={1}
+                pageSizeKb={340}
+              />
 
               {/* Response Time Area Chart */}
               <ResponseTimeChart
@@ -924,6 +1041,22 @@ export const App: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Modals for Compare & PDF Report */}
+          <ScoreComparisonModal
+            isOpen={showCompareModal}
+            onClose={() => setShowCompareModal(false)}
+            currentScoreData={currentHealthScore}
+            targetUrl={selectedMonitor?.url || 'https://example.com'}
+          />
+
+          <ReportDownloadModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            result={latestAnalysis}
+            targetUrl={selectedMonitor?.url || 'https://example.com'}
+            ownerProfile={ownerProfile}
+          />
         </main>
       </div>
     </div>

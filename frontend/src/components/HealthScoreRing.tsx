@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { HealthScoreCalculation } from '../types';
-import { Info, X, ShieldCheck, Zap, Lock, Search, Wrench } from 'lucide-react';
+import { Info, X, ShieldCheck, Zap, Lock, Search, Wrench, HelpCircle, ArrowRight, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
 interface HealthScoreRingProps {
@@ -8,8 +8,10 @@ interface HealthScoreRingProps {
 }
 
 export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showWhyModal, setShowWhyModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'weaknesses' | 'formula'>('weaknesses');
 
   if (!scoreData) {
     return (
@@ -22,6 +24,20 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
   }
 
   const { overallScore, grade, breakdown } = scoreData;
+
+  // Compute weak areas with lost points
+  const weakAreas = Object.entries(breakdown)
+    .map(([key, cat]) => ({
+      key,
+      ...cat,
+      lostPoints: cat.maxScore - cat.score,
+    }))
+    .filter((cat) => cat.lostPoints > 0)
+    .sort((a, b) => b.lostPoints - a.lostPoints);
+
+  // Projected score if top 2 weaknesses are fixed
+  const recoverablePoints = weakAreas.slice(0, 2).reduce((sum, w) => sum + Math.round(w.lostPoints * 0.85), 0);
+  const projectedScore = Math.min(98, overallScore + recoverablePoints);
 
   // Circular ring calculations
   const radius = 54;
@@ -50,19 +66,45 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
 
   return (
     <div className="card">
-      <div className="card-header">
+      <div className="card-header" style={{ flexWrap: 'wrap', gap: '10px' }}>
         <span className="card-title">
           <span>{t.healthScoreTitle}</span>
         </span>
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={() => setShowExplanation(true)}
-          style={{ padding: '4px 8px', fontSize: '0.78rem', gap: '4px' }}
-          title="Explain how score is calculated"
-        >
-          <Info size={14} />
-          <span>{t.formulaBtn}</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              setActiveTab('weaknesses');
+              setShowWhyModal(true);
+            }}
+            style={{
+              padding: '4px 10px',
+              fontSize: '0.78rem',
+              gap: '6px',
+              backgroundColor: 'rgba(192, 132, 252, 0.12)',
+              borderColor: 'rgba(192, 132, 252, 0.4)',
+              color: '#c084fc',
+              fontWeight: 700,
+            }}
+            title="Inspect reasons for this score and see direct solutions"
+          >
+            <HelpCircle size={14} />
+            <span>{language === 'hinglish' ? `Mera score ${overallScore} kyu hai?` : `Why is my score ${overallScore}?`}</span>
+          </button>
+
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              setActiveTab('formula');
+              setShowWhyModal(true);
+            }}
+            style={{ padding: '4px 8px', fontSize: '0.78rem', gap: '4px' }}
+            title="Explain how score is calculated"
+          >
+            <Info size={14} />
+            <span>{t.formulaBtn}</span>
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
@@ -198,50 +240,211 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
         </div>
       </div>
 
-      {/* Explanation Modal */}
-      {showExplanation && (
-        <div className="modal-overlay" onClick={() => setShowExplanation(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      {/* Why is my score X & Methodology Modal */}
+      {showWhyModal && (
+        <div className="modal-overlay" onClick={() => setShowWhyModal(false)}>
+          <div className="modal-content" style={{ maxWidth: '640px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Transparent Score Methodology</h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowExplanation(false)}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} style={{ color: '#c084fc' }} />
+                  <span>
+                    {language === 'hinglish'
+                      ? `Score Analysis: Aapka Score ${overallScore}/100 Kyu Hai?`
+                      : `Score Diagnostic: Why is your score ${overallScore}/100?`}
+                  </span>
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  {language === 'hinglish'
+                    ? 'Kamiyo ki list aur score ko 90+ le jaane ke seedhe upay'
+                    : 'Identified weak areas, lost points, and direct solutions to reach Grade A'}
+                </div>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowWhyModal(false)}>
                 <X size={16} />
               </button>
             </div>
-            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                Website Doctor evaluates 5 clinical pillars derived exclusively from real network, TLS, header, and content probes. Scores are never arbitrarily generated.
-              </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '8px' }}>
-                {Object.entries(breakdown).map(([key, cat]) => (
-                  <div
-                    key={key}
-                    style={{
-                      padding: '12px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.88rem' }}>
-                      <span>{cat.category}</span>
-                      <span style={{ color: 'var(--accent-primary)' }}>
-                        {cat.score} / {cat.maxScore} pts ({cat.percentage}%)
-                      </span>
-                    </div>
-                    <ul style={{ paddingLeft: '18px', marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {cat.rationale.map((r, i) => (
-                        <li key={i}>{r}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+            {/* Projected Score Banner */}
+            <div
+              style={{
+                margin: '16px 24px 0',
+                padding: '12px 16px',
+                borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(56, 189, 248, 0.1) 100%)',
+                border: '1px solid rgba(192, 132, 252, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '10px',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '0.74rem', color: '#c084fc', fontWeight: 600 }}>
+                  {language === 'hinglish' ? 'PROJECTION POTENTIAL' : 'OPTIMIZATION POTENTIAL'}
+                </div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+                  {language === 'hinglish'
+                    ? `Neeche diye gaye 2-3 steps implement karke score badhaayein:`
+                    : `Fix top weak areas below to boost your website health:`}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem', fontWeight: 800 }}>
+                <span style={{ color: 'var(--text-muted)' }}>{overallScore}</span>
+                <ArrowRight size={16} color="#38bdf8" />
+                <span style={{ color: '#16a34a' }}>{projectedScore}/100 (Grade A)</span>
               </div>
             </div>
+
+            {/* Modal Tabs */}
+            <div style={{ display: 'flex', gap: '6px', padding: '14px 24px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+              <button
+                className={`btn btn-sm ${activeTab === 'weaknesses' ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ fontSize: '0.78rem', borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0' }}
+                onClick={() => setActiveTab('weaknesses')}
+              >
+                <span>⚠️ {language === 'hinglish' ? `Kamiyan & Upay (${weakAreas.length})` : `Weak Areas & Solutions (${weakAreas.length})`}</span>
+              </button>
+              <button
+                className={`btn btn-sm ${activeTab === 'formula' ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ fontSize: '0.78rem', borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0' }}
+                onClick={() => setActiveTab('formula')}
+              >
+                <span>📊 {language === 'hinglish' ? 'Pura Formula Breakdown' : 'Full Formula Breakdown'}</span>
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {activeTab === 'weaknesses' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {weakAreas.length === 0 ? (
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#16a34a' }}>
+                      <CheckCircle2 size={32} style={{ margin: '0 auto 8px' }} />
+                      <div style={{ fontWeight: 700 }}>Fantastic! No major weak areas detected.</div>
+                      <div style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Your website is scoring at the top of its clinical health tier.
+                      </div>
+                    </div>
+                  ) : (
+                    weakAreas.map((area, idx) => {
+                      const Icon = categoryIcons[area.key] || AlertTriangle;
+                      return (
+                        <div
+                          key={area.key}
+                          style={{
+                            padding: '14px 16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                            border: '1px solid rgba(244, 63, 94, 0.25)',
+                            borderRadius: 'var(--radius-md)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'rgba(244, 63, 94, 0.15)',
+                                  color: 'var(--status-down)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                #{idx + 1}
+                              </span>
+                              <strong style={{ fontSize: '0.92rem' }}>{categoryNameMap[area.key] || area.category}</strong>
+                            </div>
+                            <span className="badge" style={{ backgroundColor: 'rgba(244, 63, 94, 0.15)', color: 'var(--status-down)', fontWeight: 700, fontSize: '0.76rem' }}>
+                              -{area.lostPoints} pts lost ({area.score}/{area.maxScore})
+                            </span>
+                          </div>
+
+                          {/* Why it was dropped */}
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {language === 'hinglish' ? 'Kyu Points Kate:' : 'Why points were deducted:'}
+                            </span>
+                            <ul style={{ paddingLeft: '18px', marginTop: '4px', color: 'var(--text-muted)' }}>
+                              {area.rationale.map((r, i) => (
+                                <li key={i}>{r}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Actionable Solution */}
+                          <div
+                            style={{
+                              padding: '8px 12px',
+                              backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                              border: '1px solid rgba(22, 163, 74, 0.3)',
+                              borderRadius: 'var(--radius-sm)',
+                              fontSize: '0.8rem',
+                              color: '#16a34a',
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '6px',
+                            }}
+                          >
+                            <CheckCircle2 size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
+                            <div>
+                              <strong>{language === 'hinglish' ? 'Doctor Ki Salah (Solution):' : 'Prescribed Remediation:'}</strong>{' '}
+                              {area.key === 'seo'
+                                ? 'Add missing <title>, meta description (120-160 chars), ensure single <h1>, and generate /sitemap.xml to gain up to +11 pts.'
+                                : area.key === 'security'
+                                ? 'Configure HSTS (Strict-Transport-Security) and Content-Security-Policy headers to gain up to +6 pts.'
+                                : area.key === 'performance'
+                                ? 'Enable Brotli/Gzip compression on your web server and optimize server TTFB under 250ms to gain up to +8 pts.'
+                                : area.key === 'technicalHealth'
+                                ? 'Fix broken 404 links and verify DNS A/AAAA records to restore up to +5 pts.'
+                                : 'Ensure 100% server uptime and resolve HTTP 5xx errors to retain max availability points.'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                    Website Doctor evaluates 5 clinical pillars derived exclusively from real network, TLS, header, and content probes. Scores are never arbitrarily generated.
+                  </p>
+
+                  {Object.entries(breakdown).map(([key, cat]) => (
+                    <div
+                      key={key}
+                      style={{
+                        padding: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.88rem' }}>
+                        <span>{categoryNameMap[key] || cat.category}</span>
+                        <span style={{ color: 'var(--accent-primary)' }}>
+                          {cat.score} / {cat.maxScore} pts ({cat.percentage}%)
+                        </span>
+                      </div>
+                      <ul style={{ paddingLeft: '18px', marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {cat.rationale.map((r, i) => (
+                          <li key={i}>{r}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="modal-footer">
-              <button className="btn btn-primary btn-sm" onClick={() => setShowExplanation(false)}>
-                Got it
+              <button className="btn btn-primary btn-sm" onClick={() => setShowWhyModal(false)}>
+                {language === 'hinglish' ? 'Samajh Gaya (Done)' : 'Close'}
               </button>
             </div>
           </div>

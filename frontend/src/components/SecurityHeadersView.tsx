@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { SecurityHeadersReport } from '../types';
-import { Shield, Check, AlertTriangle, ChevronDown, ChevronUp, Copy, CheckCheck } from 'lucide-react';
+import { Shield, Check, AlertTriangle, AlertCircle, ChevronDown, ChevronUp, Copy, CheckCheck, Code } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 interface SecurityHeadersViewProps {
   report?: SecurityHeadersReport;
 }
 
 export const SecurityHeadersView: React.FC<SecurityHeadersViewProps> = ({ report }) => {
+  const { language } = useLanguage();
   const [expandedHeader, setExpandedHeader] = useState<string | null>(null);
   const [copiedName, setCopiedName] = useState<string | null>(null);
 
@@ -18,6 +20,19 @@ export const SecurityHeadersView: React.FC<SecurityHeadersViewProps> = ({ report
     );
   }
 
+  // Calculate pass, warning, fail counts
+  const headersWithEval = report.headers.map((h) => {
+    let evaluation = h.evaluation;
+    if (!evaluation) {
+      evaluation = h.status === 'present' ? 'pass' : 'fail';
+    }
+    return { ...h, evaluation };
+  });
+
+  const passCount = headersWithEval.filter((h) => h.evaluation === 'pass').length;
+  const warnCount = headersWithEval.filter((h) => h.evaluation === 'warning').length;
+  const failCount = headersWithEval.filter((h) => h.evaluation === 'fail').length;
+
   const handleCopy = (name: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedName(name);
@@ -26,32 +41,78 @@ export const SecurityHeadersView: React.FC<SecurityHeadersViewProps> = ({ report
 
   return (
     <div className="card">
-      <div className="card-header">
+      <div className="card-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <span className="card-title">
-            <Shield size={18} style={{ color: 'var(--accent-indigo)' }} />
-            <span>HTTP Security Headers Audit</span>
+            <Shield size={18} style={{ color: '#38bdf8' }} />
+            <span>{language === 'hinglish' ? 'HTTP Security Headers Jaanch (Audit)' : 'HTTP Security Headers Audit'}</span>
           </span>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Browser defense mechanisms against XSS, clickjacking, and content sniffing
+            {language === 'hinglish'
+              ? 'XSS, clickjacking, aur data interception se browser suraksha'
+              : 'Browser defense mechanisms against XSS, clickjacking, and content sniffing'}
           </div>
         </div>
 
-        <div className="badge badge-info" style={{ fontSize: '0.8rem' }}>
-          {report.presentCount} of {report.totalEvaluated} Configured ({report.score}%)
+        {/* Pass / Warning / Fail Badges */}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span
+            className="badge"
+            style={{
+              backgroundColor: 'rgba(22, 163, 74, 0.15)',
+              color: '#16a34a',
+              border: '1px solid rgba(22, 163, 74, 0.35)',
+              fontSize: '0.76rem',
+              fontWeight: 700,
+            }}
+          >
+            ✓ {passCount} PASS
+          </span>
+
+          {warnCount > 0 && (
+            <span
+              className="badge"
+              style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                color: '#eab308',
+                border: '1px solid rgba(234, 179, 8, 0.35)',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+              }}
+            >
+              ⚠ {warnCount} WARNING
+            </span>
+          )}
+
+          {failCount > 0 && (
+            <span
+              className="badge"
+              style={{
+                backgroundColor: 'rgba(244, 63, 94, 0.15)',
+                color: 'var(--status-down)',
+                border: '1px solid rgba(244, 63, 94, 0.35)',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+              }}
+            >
+              ✕ {failCount} FAIL
+            </span>
+          )}
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-        {report.headers.map((h) => {
-          const isPresent = h.status === 'present';
+        {headersWithEval.map((h) => {
+          const isPass = h.evaluation === 'pass';
+          const isWarn = h.evaluation === 'warning';
+          const isFail = h.evaluation === 'fail';
           const isExpanded = expandedHeader === h.name;
 
           return (
             <div
               key={h.name}
               style={{
-                border: '1px solid var(--border-subtle)',
+                border: `1px solid ${isPass ? 'rgba(22, 163, 74, 0.25)' : isWarn ? 'rgba(234, 179, 8, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
                 borderRadius: 'var(--radius-md)',
                 backgroundColor: 'rgba(255, 255, 255, 0.01)',
                 overflow: 'hidden',
@@ -73,17 +134,18 @@ export const SecurityHeadersView: React.FC<SecurityHeadersViewProps> = ({ report
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div
                     style={{
-                      width: '24px',
-                      height: '24px',
+                      width: '26px',
+                      height: '26px',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: isPresent ? 'var(--status-online-bg)' : 'var(--status-degraded-bg)',
-                      color: isPresent ? 'var(--status-online)' : 'var(--status-degraded)',
+                      backgroundColor: isPass ? 'rgba(22, 163, 74, 0.15)' : isWarn ? 'rgba(234, 179, 8, 0.15)' : 'rgba(244, 63, 94, 0.15)',
+                      color: isPass ? '#16a34a' : isWarn ? '#eab308' : 'var(--status-down)',
+                      border: `1px solid ${isPass ? 'rgba(22, 163, 74, 0.35)' : isWarn ? 'rgba(234, 179, 8, 0.35)' : 'rgba(244, 63, 94, 0.35)'}`,
                     }}
                   >
-                    {isPresent ? <Check size={14} strokeWidth={3} /> : <AlertTriangle size={14} />}
+                    {isPass ? <Check size={14} strokeWidth={3} /> : isWarn ? <AlertTriangle size={14} /> : <AlertCircle size={14} />}
                   </div>
                   <div>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.88rem', fontWeight: 600 }}>
@@ -108,12 +170,20 @@ export const SecurityHeadersView: React.FC<SecurityHeadersViewProps> = ({ report
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span
-                    className={`badge ${isPresent ? 'badge-online' : 'badge-degraded'}`}
-                    style={{ fontSize: '0.72rem' }}
+                    style={{
+                      padding: '3px 10px',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.04em',
+                      backgroundColor: isPass ? 'rgba(22, 163, 74, 0.15)' : isWarn ? 'rgba(234, 179, 8, 0.15)' : 'rgba(244, 63, 94, 0.15)',
+                      color: isPass ? '#16a34a' : isWarn ? '#eab308' : 'var(--status-down)',
+                      border: `1px solid ${isPass ? 'rgba(22, 163, 74, 0.35)' : isWarn ? 'rgba(234, 179, 8, 0.35)' : 'rgba(244, 63, 94, 0.35)'}`,
+                    }}
                   >
-                    {isPresent ? '✓ Present' : '⚠ Missing'}
+                    {isPass ? 'PASS' : isWarn ? 'WARNING' : 'FAIL'}
                   </span>
                   {isExpanded ? <ChevronUp size={16} color="var(--text-muted)" /> : <ChevronDown size={16} color="var(--text-muted)" />}
                 </div>

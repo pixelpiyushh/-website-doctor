@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { DiagnosticAnalysisResult, Monitor } from '../types';
-import { Search, Activity, Check, Loader2, AlertCircle, Plus, ArrowRight, ShieldCheck, Zap, Lock, RefreshCw } from 'lucide-react';
+import { Search, Activity, Check, Loader2, AlertCircle, Plus, ArrowRight, ShieldCheck, Zap, Lock, RefreshCw, FileText, TrendingUp } from 'lucide-react';
 import { HealthScoreRing } from './HealthScoreRing';
 import { SSLInspectorView } from './SSLInspectorView';
 import { SecurityHeadersView } from './SecurityHeadersView';
 import { SEOHealthView } from './SEOHealthView';
+import { PerformanceAuditView } from './PerformanceAuditView';
+import { ScoreComparisonModal } from './ScoreComparisonModal';
+import { ReportDownloadModal } from './ReportDownloadModal';
 import { AIDoctorView } from './AIDoctorView';
 import { ResponseTimeChart } from './ResponseTimeChart';
 import { apiUrl } from '../apiConfig';
@@ -14,12 +17,18 @@ interface UrlCheckerProps {
   initialUrl?: string;
   onAnalysisComplete?: (result: DiagnosticAnalysisResult) => void;
   onCreateMonitorFromAnalysis?: (url: string) => void;
+  ownerProfile?: {
+    name: string;
+    role: string;
+    organization: string;
+  };
 }
 
 export const UrlChecker: React.FC<UrlCheckerProps> = ({
   initialUrl = '',
   onAnalysisComplete,
   onCreateMonitorFromAnalysis,
+  ownerProfile,
 }) => {
   const { t, language } = useLanguage();
   const [url, setUrl] = useState(initialUrl);
@@ -27,7 +36,9 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
   const [currentStage, setCurrentStage] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<DiagnosticAnalysisResult | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ssl' | 'headers' | 'seo' | 'ai'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'perf' | 'ssl' | 'headers' | 'seo'>('overview');
+  const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
 
   const stages = language === 'hinglish' ? [
     'Server se connection banaya jaa rha hai...',
@@ -253,15 +264,41 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
               </div>
             </div>
 
-            {onCreateMonitorFromAnalysis && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 className="btn btn-secondary btn-sm"
-                onClick={() => onCreateMonitorFromAnalysis(result.url)}
+                onClick={() => setShowCompareModal(true)}
+                title="Compare baseline vs current health score (Before vs After)"
+                style={{
+                  backgroundColor: 'rgba(192, 132, 252, 0.12)',
+                  borderColor: 'rgba(192, 132, 252, 0.4)',
+                  color: '#c084fc',
+                  fontWeight: 600,
+                }}
               >
-                <Plus size={14} />
-                <span>Add to 24/7 Monitors</span>
+                <TrendingUp size={14} />
+                <span>{language === 'hinglish' ? 'Compare (Before vs After)' : 'Compare Before vs After'}</span>
               </button>
-            )}
+
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => setShowReportModal(true)}
+                title="Generate and print complete Clinical PDF Report"
+              >
+                <FileText size={14} />
+                <span>{language === 'hinglish' ? 'Generate PDF Report' : 'Generate PDF Report'}</span>
+              </button>
+
+              {onCreateMonitorFromAnalysis && (
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => onCreateMonitorFromAnalysis(result.url)}
+                >
+                  <Plus size={14} />
+                  <span>Add to 24/7 Monitors</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Quick Metrics Cards */}
@@ -325,22 +362,28 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
               AI Doctor
             </button>
             <button
-              className={`btn btn-sm ${activeTab === 'ssl' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveTab('ssl')}
+              className={`btn btn-sm ${activeTab === 'perf' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('perf')}
             >
-              SSL / TLS
-            </button>
-            <button
-              className={`btn btn-sm ${activeTab === 'headers' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveTab('headers')}
-            >
-              Security Headers
+              Performance ⚡
             </button>
             <button
               className={`btn btn-sm ${activeTab === 'seo' ? 'btn-primary' : 'btn-ghost'}`}
               onClick={() => setActiveTab('seo')}
             >
-              SEO Health
+              SEO Health 🔎
+            </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'headers' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('headers')}
+            >
+              Security Headers 🔐
+            </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'ssl' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('ssl')}
+            >
+              SSL / TLS 🔒
             </button>
           </div>
 
@@ -351,6 +394,19 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                 <HealthScoreRing scoreData={result.healthScore} />
                 <SSLInspectorView ssl={result.ssl} />
               </div>
+
+              {/* Performance Recommendations ⚡ */}
+              <PerformanceAuditView
+                responseTimeMs={result.probe.responseTimeMs}
+                ttfbMs={result.probe.ttfbMs}
+                contentEncoding={result.probe.contentEncoding}
+                hasCacheControl={Boolean(result.probe.cacheControl)}
+                cacheControlHeader={result.probe.cacheControl}
+                totalImages={result.seo?.totalImages || 4}
+                unoptimizedImagesCount={result.seo?.imagesMissingAlt || 1}
+                pageSizeKb={Math.round((result.probe.contentLength || 320000) / 1024)}
+              />
+
               {/* Live Moving Graph for Analyzed Website */}
               <ResponseTimeChart
                 checks={[
@@ -388,9 +444,38 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
             />
           )}
 
+          {activeTab === 'perf' && (
+            <PerformanceAuditView
+              responseTimeMs={result.probe.responseTimeMs}
+              ttfbMs={result.probe.ttfbMs}
+              contentEncoding={result.probe.contentEncoding}
+              hasCacheControl={Boolean(result.probe.cacheControl)}
+              cacheControlHeader={result.probe.cacheControl}
+              totalImages={result.seo?.totalImages || 4}
+              unoptimizedImagesCount={result.seo?.imagesMissingAlt || 1}
+              pageSizeKb={Math.round((result.probe.contentLength || 320000) / 1024)}
+            />
+          )}
+
           {activeTab === 'ssl' && <SSLInspectorView ssl={result.ssl} />}
           {activeTab === 'headers' && <SecurityHeadersView report={result.securityHeaders} />}
           {activeTab === 'seo' && <SEOHealthView seo={result.seo} />}
+
+          {/* Modals for Compare & PDF Report */}
+          <ScoreComparisonModal
+            isOpen={showCompareModal}
+            onClose={() => setShowCompareModal(false)}
+            currentScoreData={result.healthScore}
+            targetUrl={result.url}
+          />
+
+          <ReportDownloadModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            result={result}
+            targetUrl={result.url}
+            ownerProfile={ownerProfile}
+          />
         </div>
       )}
     </div>

@@ -101,16 +101,33 @@ export interface SecurityHeaderItem {
   name: string;
   value?: string;
   status: 'present' | 'missing' | 'not_applicable';
+  evaluation?: 'pass' | 'warning' | 'fail';
   meaning: string;
   whyItMatters: string;
   possibleFix: string;
+  snippet?: {
+    nginx: string;
+    apache: string;
+    cloudflare: string;
+  };
 }
 
 export interface SecurityHeadersReport {
   headers: SecurityHeaderItem[];
-  score: number;
+  score: number; // 0 to 100
   presentCount: number;
+  passCount?: number;
+  warningCount?: number;
+  failCount?: number;
   totalEvaluated: number;
+}
+
+export interface SEOCheckItem {
+  key: string;
+  name: string;
+  status: 'pass' | 'warning' | 'fail';
+  detail: string;
+  recommendation?: string;
 }
 
 export interface SEOReport {
@@ -134,7 +151,33 @@ export interface SEOReport {
   ogImage?: string;
   hasSitemap: boolean;
   hasRobotsTxt: boolean;
+  checklist?: SEOCheckItem[];
   issues: { type: 'critical' | 'warning' | 'info'; message: string; recommendation: string }[];
+}
+
+export interface PerformanceRecommendation {
+  id: string;
+  category: 'slow_resources' | 'large_images' | 'ttfb' | 'caching' | 'compression';
+  title: string;
+  status: 'pass' | 'warning' | 'fail';
+  value: string;
+  suggestion: string;
+}
+
+export interface ScoreComparisonData {
+  previousScore: number;
+  currentScore: number;
+  previousGrade: string;
+  currentGrade: string;
+  improvementPts: number;
+  breakdownDiff: {
+    availability: { prev: number; curr: number };
+    performance: { prev: number; curr: number };
+    security: { prev: number; curr: number };
+    seo: { prev: number; curr: number };
+    technicalHealth: { prev: number; curr: number };
+  };
+  resolvedFixes: string[];
 }
 
 export interface SSLCheckResult {
