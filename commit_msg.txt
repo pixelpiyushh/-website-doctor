@@ -1,1 +1,1 @@
-feat: Add subtle futuristic animated space background with drifting twinkling stars, rotating digital Earth, and flowing network lines
+feat: Replace heavy globe background with gentle twinkling shining star particles
