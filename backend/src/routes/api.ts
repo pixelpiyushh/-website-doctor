@@ -46,7 +46,7 @@ apiRouter.get('/events', (req: Request, res: Response) => {
  * Full Diagnostic Pipeline: Analyze any URL
  */
 apiRouter.post('/analyze', async (req: Request, res: Response): Promise<void> => {
-  const { url } = req.body;
+  const { url, language = 'en' } = req.body;
   if (!url || typeof url !== 'string') {
     res.status(400).json({ error: 'A valid URL is required.' });
     return;
@@ -98,6 +98,7 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<void> =>
       securityHeaders,
       seo,
       healthScore,
+      language: language === 'hinglish' ? 'hinglish' : 'en',
     });
 
     // 9. Technology Stack Detection
@@ -575,12 +576,20 @@ apiRouter.post('/chat', (req: Request, res: Response) => {
   const q = String(message).toLowerCase();
 
   let answer = '';
-  const suggestedPrompts = [
-    'Meri website slow kyun hai?',
-    'SEO score kaise badhaye?',
-    'Score 90+ kaise le jayein?',
-    'Security headers kaise config karein?',
-  ];
+  const isHinglish = language === 'hinglish';
+  const suggestedPrompts = isHinglish
+    ? [
+        'Meri website slow kyun hai?',
+        'SEO score kaise badhaye?',
+        'Health score 90+ kaise le jayein?',
+        'Security headers kaise config karein?',
+      ]
+    : [
+        'Why is my website slow?',
+        'How do I improve my SEO score?',
+        'How do I reach a 90+ health score?',
+        'How do I configure security headers?',
+      ];
   let actionType: 'view_seo' | 'view_perf' | 'view_security' | 'view_ssl' | undefined = undefined;
 
   const url = siteContext?.url || 'Aapki website';

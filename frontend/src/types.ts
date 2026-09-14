@@ -223,6 +223,58 @@ export interface AIDoctorDiagnosis {
   generatedBy: string;
   insufficientData: boolean;
   timestamp: string;
+  translations?: {
+    en: {
+      headline: string;
+      clinicalAssessment: string;
+      vitalSigns: {
+        availability: string;
+        responseTime: string;
+        sslHealth: string;
+        securityPosture: string;
+        seoReadiness: string;
+      };
+      problemsDetected: {
+        id: string;
+        severity: 'critical' | 'warning' | 'optimization';
+        title: string;
+        description: string;
+        measuredFact: string;
+      }[];
+      recommendedActions: {
+        id: string;
+        priority: number;
+        title: string;
+        rationale: string;
+        implementationCodeSnippet?: string;
+      }[];
+    };
+    hinglish: {
+      headline: string;
+      clinicalAssessment: string;
+      vitalSigns: {
+        availability: string;
+        responseTime: string;
+        sslHealth: string;
+        securityPosture: string;
+        seoReadiness: string;
+      };
+      problemsDetected: {
+        id: string;
+        severity: 'critical' | 'warning' | 'optimization';
+        title: string;
+        description: string;
+        measuredFact: string;
+      }[];
+      recommendedActions: {
+        id: string;
+        priority: number;
+        title: string;
+        rationale: string;
+        implementationCodeSnippet?: string;
+      }[];
+    };
+  };
 }
 
 export interface DiagnosticAnalysisResult {
