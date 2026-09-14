@@ -1,1 +1,1 @@
-revert: Remove background particle canvas from LandingPage
+feat: Add movable cyber-cosmic animated background matching reference scene with 3D grid, digital Earth, architecture topology, flowing wave streams and glowing particles

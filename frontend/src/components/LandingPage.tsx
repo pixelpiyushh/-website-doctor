@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Sparkles,
 } from 'lucide-react';
+import { CyberCosmicBackground } from './CyberCosmicBackground';
 
 interface LandingPageProps {
   onCheckWebsite: (url: string) => void;
@@ -62,6 +63,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
 
   return (
     <div style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* Living Cybernetic Space Background matching reference scene (3D Grid Floor, Digital Earth, Blueprint Topology, Waves & Particles) */}
+      <CyberCosmicBackground />
+
       {/* Ambient Cosmic Background Orbs (Light Purple & Sky Blue) */}
       <div className="cosmic-mesh-bg">
         <div className="cosmic-orb-purple" style={{ top: '-120px', left: '-80px' }} />
