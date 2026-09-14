@@ -208,7 +208,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
           </div>
 
           <div className="orbit-satellite sat-3">
-            <Shield size={14} style={{ color: '#10b981' }} />
+            <Shield size={14} style={{ color: '#16a34a' }} />
             <span>🔒 SSL 256-bit Valid</span>
           </div>
 
@@ -266,7 +266,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
               <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
-              <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+              <span style={{ width: '11px', height: '11px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
               <span style={{ marginLeft: '12px', fontSize: '0.76rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                 https://demo-store.example.com • Telemetry Stream
               </span>
@@ -504,8 +504,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
                 Autonomous workers execute periodic probes, tracking TTFB, TLS validity, HTTP headers, and availability state.
               </p>
             </div>
-            <div className="card card-glow-hover" style={{ border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-              <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#10b981', marginBottom: '10px', fontFamily: 'var(--font-display)' }}>03</div>
+            <div className="card card-glow-hover" style={{ border: '1px solid rgba(22, 163, 74, 0.35)' }}>
+              <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#16a34a', marginBottom: '10px', fontFamily: 'var(--font-display)' }}>03</div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '8px' }}>AI Doctor Prescription</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.55 }}>
                 Actionable remediation guides and instant incident resolution keep your website performing in top health.

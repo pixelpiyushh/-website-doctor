@@ -54,9 +54,12 @@
   --accent-indigo-subtle: rgba(99, 102, 241, 0.12);
   --accent-indigo-border: rgba(99, 102, 241, 0.3);
 
-  /* Status Colors */
-  --status-online: #10b981;
-  --status-online-bg: rgba(16, 185, 129, 0.12);
+  /* Status Colors — Dark Parrot Green for Online */
+  --status-online: #16a34a;
+  --status-online-bg: rgba(22, 163, 74, 0.14);
+  --accent-parrot-green: #16a34a;
+  --accent-parrot-dark: #15803d;
+  --accent-parrot-glow: rgba(22, 163, 74, 0.45);
   --status-degraded: #f59e0b;
   --status-degraded-bg: rgba(245, 158, 11, 0.12);
   --status-down: #f43f5e;
@@ -358,7 +361,7 @@ body {
 .badge-online {
   background-color: var(--status-online-bg);
   color: var(--status-online);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(22, 163, 74, 0.35);
 }
 
 .badge-degraded {
@@ -931,9 +934,9 @@ body {
 .orbit-satellite.sat-3 {
   animation: orbit-circular-3 36s linear infinite;
   background: rgba(19, 22, 32, 0.88);
-  border: 1px solid rgba(16, 185, 129, 0.45);
-  color: #d1fae5;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+  border: 1px solid rgba(22, 163, 74, 0.45);
+  color: #dcfce7;
+  box-shadow: 0 0 16px rgba(22, 163, 74, 0.35);
 }
 
 /* High-Tech Circular Radar Scanner */

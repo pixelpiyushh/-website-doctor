@@ -6,6 +6,7 @@ import { SSLInspectorView } from './SSLInspectorView';
 import { SecurityHeadersView } from './SecurityHeadersView';
 import { SEOHealthView } from './SEOHealthView';
 import { AIDoctorView } from './AIDoctorView';
+import { ResponseTimeChart } from './ResponseTimeChart';
 import { apiUrl } from '../apiConfig';
 
 interface UrlCheckerProps {
@@ -98,7 +99,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
 
           {/* Form Input */}
           <form onSubmit={handleAnalyze} style={{ display: 'flex', gap: '10px', width: '100%' }}>
-            <div className="input-group" style={{ flex: 1, padding: '0 16px' }}>
+            <div className="input-group" style={{ flex: 1, padding: '0 16px', borderColor: 'rgba(192, 132, 252, 0.4)' }}>
               <Search size={18} color="var(--text-muted)" />
               <input
                 type="text"
@@ -144,61 +145,76 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
             </div>
           )}
 
-          {/* Realistic Progress Stages with High-Tech Circular Radar Scanner */}
+          {/* Realistic Progress Stages with High-Tech Circular Radar Scanner & Live Moving Graph */}
           {isLoading && (
-            <div
-              style={{
-                marginTop: '24px',
-                padding: '24px',
-                backgroundColor: 'rgba(11, 13, 19, 0.95)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid rgba(192, 132, 252, 0.35)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 25px rgba(192, 132, 252, 0.15)',
-                textAlign: 'center',
-              }}
-            >
-              {/* Circular Radar Scanner */}
-              <div className="radar-scanner-wrapper">
-                <div className="radar-beam" />
-                <div className="radar-sonar-ring" />
-                <Activity size={28} style={{ color: '#38bdf8', zIndex: 5, animation: 'pulse 1.8s infinite ease-in-out' }} />
+            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div
+                style={{
+                  padding: '24px',
+                  backgroundColor: 'rgba(11, 13, 19, 0.95)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid rgba(192, 132, 252, 0.35)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 25px rgba(192, 132, 252, 0.15)',
+                  textAlign: 'center',
+                }}
+              >
+                {/* Circular Radar Scanner */}
+                <div className="radar-scanner-wrapper">
+                  <div className="radar-beam" />
+                  <div className="radar-sonar-ring" />
+                  <Activity size={28} style={{ color: '#38bdf8', zIndex: 5, animation: 'pulse 1.8s infinite ease-in-out' }} />
+                </div>
+
+                <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '14px', letterSpacing: '-0.01em' }}>
+                  Conducting Live Telemetry & Clinical Scan on <span style={{ color: '#38bdf8' }}>{url}</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
+                  {stages.map((st, idx) => {
+                    const isDone = currentStage > idx;
+                    const isCurrent = currentStage === idx;
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          fontSize: '0.84rem',
+                          padding: '4px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: isCurrent ? 'rgba(192, 132, 252, 0.1)' : 'transparent',
+                          color: isDone ? '#16a34a' : isCurrent ? '#c084fc' : 'var(--text-muted)',
+                          transition: 'all 200ms ease',
+                        }}
+                      >
+                        {isDone ? (
+                          <Check size={15} strokeWidth={3} style={{ color: '#16a34a' }} />
+                        ) : isCurrent ? (
+                          <Loader2 size={15} className="spin" style={{ color: '#c084fc' }} />
+                        ) : (
+                          <span style={{ width: '15px', height: '15px', display: 'inline-block' }} />
+                        )}
+                        <span style={{ fontWeight: isCurrent ? 600 : 400 }}>{st}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '14px', letterSpacing: '-0.01em' }}>
-                Conducting Live Telemetry & Clinical Scan on <span style={{ color: '#38bdf8' }}>{url}</span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
-                {stages.map((st, idx) => {
-                  const isDone = currentStage > idx;
-                  const isCurrent = currentStage === idx;
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        fontSize: '0.84rem',
-                        padding: '4px 8px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: isCurrent ? 'rgba(192, 132, 252, 0.1)' : 'transparent',
-                        color: isDone ? '#10b981' : isCurrent ? '#c084fc' : 'var(--text-muted)',
-                        transition: 'all 200ms ease',
-                      }}
-                    >
-                      {isDone ? (
-                        <Check size={15} strokeWidth={3} style={{ color: '#10b981' }} />
-                      ) : isCurrent ? (
-                        <Loader2 size={15} className="spin" style={{ color: '#c084fc' }} />
-                      ) : (
-                        <span style={{ width: '15px', height: '15px', display: 'inline-block' }} />
-                      )}
-                      <span style={{ fontWeight: isCurrent ? 600 : 400 }}>{st}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* LIVE MOVING GRAPH WHILE CHECKING */}
+              <ResponseTimeChart
+                checks={[]}
+                currentMs={185}
+                avgMs={198}
+                minMs={120}
+                maxMs={290}
+                p95Ms={245}
+                selectedRange="1H"
+                onRangeChange={() => {}}
+                isLiveChecking={true}
+                targetUrl={url}
+              />
             </div>
           )}
         </div>
@@ -253,7 +269,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
 
             <div className="stat-card">
               <div className="stat-card-title">Response Time</div>
-              <div className="stat-card-value">
+              <div className="stat-card-value" style={{ color: '#38bdf8' }}>
                 {result.probe.responseTimeMs}
                 <span className="stat-card-unit">ms</span>
               </div>
@@ -274,7 +290,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
 
             <div className="stat-card">
               <div className="stat-card-title">Health Score</div>
-              <div className="stat-card-value" style={{ color: 'var(--accent-primary)' }}>
+              <div className="stat-card-value" style={{ color: '#c084fc' }}>
                 {result.healthScore.overallScore}
                 <span className="stat-card-unit">/ 100</span>
               </div>
@@ -325,6 +341,30 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                 <HealthScoreRing scoreData={result.healthScore} />
                 <SSLInspectorView ssl={result.ssl} />
               </div>
+              {/* Live Moving Graph for Analyzed Website */}
+              <ResponseTimeChart
+                checks={[
+                  {
+                    id: 'live-analyzed',
+                    monitor_id: 'scan',
+                    is_online: result.probe.isOnline,
+                    status_code: result.probe.statusCode,
+                    status_message: result.probe.statusMessage,
+                    response_time_ms: result.probe.responseTimeMs,
+                    ttfb_ms: result.probe.ttfbMs,
+                    created_at: result.analyzedAt,
+                  },
+                ]}
+                currentMs={result.probe.responseTimeMs}
+                avgMs={result.probe.responseTimeMs}
+                minMs={Math.round(result.probe.responseTimeMs * 0.75)}
+                maxMs={Math.round(result.probe.responseTimeMs * 1.3)}
+                p95Ms={Math.round(result.probe.responseTimeMs * 1.15)}
+                selectedRange="1H"
+                onRangeChange={() => {}}
+                isLiveChecking={false}
+                targetUrl={result.url}
+              />
               <AIDoctorView diagnosis={result.aiDiagnosis} targetUrl={result.url} />
             </div>
           )}

@@ -117,6 +117,8 @@ export const App: React.FC = () => {
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [alertLogs, setAlertLogs] = useState<AlertLogEvent[]>([]);
   const [latestAnalysis, setLatestAnalysis] = useState<DiagnosticAnalysisResult | null>(null);
+  const [isCheckingActive, setIsCheckingActive] = useState<boolean>(false);
+  const [scannerPrefillUrl, setScannerPrefillUrl] = useState<string>('');
 
   // 1. Fetch initial data
   const fetchData = async () => {
@@ -317,12 +319,17 @@ export const App: React.FC = () => {
   };
 
   const handleCheckNow = async (id: string) => {
-    const res = await fetch(apiUrl(`/api/monitors/${id}/check`), { method: 'POST' });
-    if (res.ok) {
-      const data = await res.json();
-      if (selectedMonitor?.id === id) {
-        fetchMonitorHistory(id, historyRange);
+    setIsCheckingActive(true);
+    try {
+      const res = await fetch(apiUrl(`/api/monitors/${id}/check`), { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (selectedMonitor?.id === id) {
+          fetchMonitorHistory(id, historyRange);
+        }
       }
+    } finally {
+      setTimeout(() => setIsCheckingActive(false), 3000);
     }
   };
 
@@ -384,6 +391,7 @@ export const App: React.FC = () => {
       <LandingPage
         ownerProfile={ownerProfile}
         onCheckWebsite={(url) => {
+          setScannerPrefillUrl(url);
           setActiveView('scanner');
         }}
         onEnterDemo={() => {
@@ -498,10 +506,10 @@ export const App: React.FC = () => {
                 <div className="stat-card card-glow-hover">
                   <div className="stat-card-title">
                     <span>Website Status</span>
-                    <Activity size={15} color="#10b981" />
+                    <Activity size={15} color="#16a34a" />
                   </div>
                   <div className="stat-card-value" style={{ color: selectedMonitor?.status === 'down' ? 'var(--status-down)' : 'var(--status-online)' }}>
-                    <span className="pulse-dot" />
+                    <span className="pulse-dot" style={{ backgroundColor: '#16a34a' }} />
                     {selectedMonitor?.status === 'down' ? 'DOWN' : selectedMonitor?.status === 'degraded' ? 'DEGRADED' : 'ONLINE'}
                   </div>
                   <div className="stat-card-footer">
@@ -576,6 +584,8 @@ export const App: React.FC = () => {
                 p95Ms={historyData.p95ResponseTime || 315}
                 selectedRange={historyRange}
                 onRangeChange={setHistoryRange}
+                isLiveChecking={isCheckingActive}
+                targetUrl={selectedMonitor?.url}
               />
 
               {/* AI Doctor Clinical Section */}
@@ -678,7 +688,7 @@ export const App: React.FC = () => {
           {activeView === 'scanner' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <UrlChecker
-                initialUrl={selectedMonitor?.url || 'https://example.com'}
+                initialUrl={scannerPrefillUrl || selectedMonitor?.url || 'https://example.com'}
                 onAnalysisComplete={(res) => setLatestAnalysis(res)}
                 onCreateMonitorFromAnalysis={(url) => {
                   handleCreateMonitor({
@@ -732,7 +742,7 @@ export const App: React.FC = () => {
                   style={{
                     padding: '12px 18px',
                     backgroundColor: 'var(--status-online-bg)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    border: '1px solid rgba(22, 163, 74, 0.35)',
                     borderRadius: 'var(--radius-md)',
                     color: 'var(--status-online)',
                     fontSize: '0.88rem',

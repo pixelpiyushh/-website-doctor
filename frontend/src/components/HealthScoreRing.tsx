@@ -123,25 +123,6 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
             />
           </svg>
 
-          {/* Orbiting Satellite Dot */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '10px',
-              height: '10px',
-              marginTop: '-5px',
-              marginLeft: '-5px',
-              borderRadius: '50%',
-              backgroundColor: '#38bdf8',
-              boxShadow: '0 0 10px #38bdf8, 0 0 16px #c084fc',
-              animation: 'spin-clockwise 6s linear infinite',
-              transformOrigin: '0 54px',
-              pointerEvents: 'none',
-            }}
-          />
-
           <div
             style={{
               position: 'absolute',
@@ -192,7 +173,7 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
                         cat.status === 'excellent'
                           ? 'var(--status-online)'
                           : cat.status === 'good'
-                          ? '#10b981'
+                          ? '#16a34a'
                           : cat.status === 'fair'
                           ? 'var(--status-degraded)'
                           : 'var(--status-down)',
