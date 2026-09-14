@@ -1,1 +1,1 @@
-feat: Replace heavy globe background with gentle twinkling shining star particles
+revert: Remove background particle canvas from LandingPage

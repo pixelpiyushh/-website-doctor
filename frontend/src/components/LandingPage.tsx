@@ -15,7 +15,6 @@ import {
   HelpCircle,
   Sparkles,
 } from 'lucide-react';
-import { FuturisticEarthBackground } from './FuturisticEarthBackground';
 
 interface LandingPageProps {
   onCheckWebsite: (url: string) => void;
@@ -63,9 +62,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCheckWebsite, onEnte
 
   return (
     <div style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Subtle Futuristic Space Background with Twinkling Stars, Rotating Digital Earth & Network Arcs */}
-      <FuturisticEarthBackground />
-
       {/* Ambient Cosmic Background Orbs (Light Purple & Sky Blue) */}
       <div className="cosmic-mesh-bg">
         <div className="cosmic-orb-purple" style={{ top: '-120px', left: '-80px' }} />
