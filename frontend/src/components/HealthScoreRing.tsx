@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { HealthScoreCalculation } from '../types';
 import { Info, X, ShieldCheck, Zap, Lock, Search, Wrench } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 interface HealthScoreRingProps {
   scoreData?: HealthScoreCalculation;
 }
 
 export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) => {
+  const { t } = useLanguage();
   const [showExplanation, setShowExplanation] = useState(false);
 
   if (!scoreData) {
@@ -38,11 +40,19 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
     technicalHealth: Wrench,
   };
 
+  const categoryNameMap: Record<string, string> = {
+    availability: t.catAvailability,
+    performance: t.catPerformance,
+    security: t.catSecurity,
+    seo: t.catSEO,
+    technicalHealth: t.catTechnical,
+  };
+
   return (
     <div className="card">
       <div className="card-header">
         <span className="card-title">
-          <span>Website Health Score</span>
+          <span>{t.healthScoreTitle}</span>
         </span>
         <button
           className="btn btn-ghost btn-sm"
@@ -51,7 +61,7 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
           title="Explain how score is calculated"
         >
           <Info size={14} />
-          <span>Formula</span>
+          <span>{t.formulaBtn}</span>
         </button>
       </div>
 
@@ -137,7 +147,7 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
               {overallScore}
             </span>
             <span style={{ fontSize: '0.72rem', color: '#c084fc', fontWeight: 700, letterSpacing: '0.05em', marginTop: '3px' }}>
-              GRADE {grade}
+              {t.healthGrade} {grade}
             </span>
           </div>
         </div>
@@ -151,7 +161,7 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '3px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
                     <Icon size={13} style={{ color: 'var(--text-muted)' }} />
-                    {cat.category}
+                    {categoryNameMap[key] || cat.category}
                   </span>
                   <span style={{ fontWeight: 600 }}>
                     {cat.score} / {cat.maxScore} pts

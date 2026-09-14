@@ -39,8 +39,10 @@ import {
   RefreshCw,
   User,
 } from 'lucide-react';
+import { useLanguage } from './i18n';
 
 export const App: React.FC = () => {
+  const { t } = useLanguage();
   const [activeView, setActiveView] = useState<string>('overview');
   const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
   const [isSSEConnected, setIsSSEConnected] = useState<boolean>(false);
@@ -444,18 +446,18 @@ export const App: React.FC = () => {
               <div className="page-header" style={{ marginBottom: '14px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <h1 className="page-title">Website Doctor Dashboard</h1>
+                    <h1 className="page-title">{t.dashboardTitle}</h1>
                     {isDemoMode && (
                       <span className="badge gradient-badge" style={{ fontSize: '0.74rem' }}>
-                        Demo Data
+                        {t.demoActive}
                       </span>
                     )}
                   </div>
                   <p className="page-subtitle">
-                    Real-time clinical telemetry, availability metrics, and automated website doctor diagnostics
+                    {t.dashboardSubtitle}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    <span>Platform Owner:</span>
+                    <span>{t.platformOwner}</span>
                     <strong style={{ color: 'var(--text-primary)' }}>{ownerProfile.name}</strong>
                     <span>• {ownerProfile.role} ({ownerProfile.organization})</span>
                   </div>
@@ -464,7 +466,7 @@ export const App: React.FC = () => {
                 {/* Target Monitor Switcher */}
                 {monitors.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Target:</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t.targetWebsite}</span>
                     <select
                       value={selectedMonitor?.id || ''}
                       onChange={(e) => {
@@ -493,8 +495,8 @@ export const App: React.FC = () => {
                       onClick={() => selectedMonitor && handleCheckNow(selectedMonitor.id)}
                       title="Run manual probe check now"
                     >
-                      <RefreshCw size={14} />
-                      <span>Check</span>
+                      <RefreshCw size={14} className={isCheckingActive ? "spin" : ""} />
+                      <span>{isCheckingActive ? t.checkingStatus : t.checkNowBtn}</span>
                     </button>
                   </div>
                 )}
@@ -505,58 +507,58 @@ export const App: React.FC = () => {
                 {/* 1. Status */}
                 <div className="stat-card card-glow-hover">
                   <div className="stat-card-title">
-                    <span>Website Status</span>
+                    <span>{t.statusTitle}</span>
                     <Activity size={15} color="#16a34a" />
                   </div>
                   <div className="stat-card-value" style={{ color: selectedMonitor?.status === 'down' ? 'var(--status-down)' : 'var(--status-online)' }}>
                     <span className="pulse-dot" style={{ backgroundColor: '#16a34a' }} />
-                    {selectedMonitor?.status === 'down' ? 'DOWN' : selectedMonitor?.status === 'degraded' ? 'DEGRADED' : 'ONLINE'}
+                    {selectedMonitor?.status === 'down' ? t.statusDown : selectedMonitor?.status === 'degraded' ? t.statusDegraded : t.statusOnline}
                   </div>
                   <div className="stat-card-footer">
-                    HTTP {selectedMonitor?.latest_status_code || 200} OK
+                    {t.statusHttpOk}
                   </div>
                 </div>
 
                 {/* 2. Response Time */}
                 <div className="stat-card card-glow-hover" style={{ border: '1px solid rgba(56, 189, 248, 0.25)' }}>
                   <div className="stat-card-title">
-                    <span>Response Time</span>
+                    <span>{t.responseTimeTitle}</span>
                     <Zap size={15} color="#38bdf8" />
                   </div>
                   <div className="stat-card-value" style={{ color: '#38bdf8' }}>
                     {historyData.currentResponseTime || selectedMonitor?.latest_response_time || 243}
-                    <span className="stat-card-unit" style={{ color: '#7dd3fc' }}>ms</span>
+                    <span className="stat-card-unit" style={{ color: '#7dd3fc' }}>{t.responseTimeUnit}</span>
                   </div>
                   <div className="stat-card-footer">
-                    Avg: {historyData.avgResponseTime || 230}ms • P95: {historyData.p95ResponseTime || 310}ms
+                    {t.responseTimeAvg}: {historyData.avgResponseTime || 230}{t.responseTimeUnit} • {t.responseTimeP95}: {historyData.p95ResponseTime || 310}{t.responseTimeUnit}
                   </div>
                 </div>
 
                 {/* 3. Rolling Uptime */}
                 <div className="stat-card card-glow-hover" style={{ border: '1px solid rgba(192, 132, 252, 0.25)' }}>
                   <div className="stat-card-title">
-                    <span>Rolling Uptime</span>
+                    <span>{t.uptimeTitle}</span>
                     <Shield size={15} color="#c084fc" />
                   </div>
                   <div className="stat-card-value" style={{ color: '#c084fc' }}>
                     {selectedMonitor?.uptime_pct || 99.98}%
                   </div>
                   <div className="stat-card-footer">
-                    24h: {historyData.uptime24h}% • 30d: {historyData.uptime30d}%
+                    {t.uptimeLast24h}: {historyData.uptime24h}% • {t.uptimeLast30d}: {historyData.uptime30d}%
                   </div>
                 </div>
 
                 {/* 4. SSL Health */}
                 <div className="stat-card card-glow-hover">
                   <div className="stat-card-title">
-                    <span>SSL Certificate</span>
+                    <span>{t.sslTitle}</span>
                     <Lock size={15} color="#38bdf8" />
                   </div>
                   <div className="stat-card-value" style={{ fontSize: '1.4rem', color: 'var(--status-online)' }}>
-                    Valid
+                    {t.sslValid}
                   </div>
                   <div className="stat-card-footer">
-                    180 days remaining • Let's Encrypt
+                    180 {t.sslDaysLeft} • Let's Encrypt
                   </div>
                 </div>
               </div>

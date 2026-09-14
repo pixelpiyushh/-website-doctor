@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Doctor — College Project Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090D16;
+      --card-bg: #111827;
+      --card-alt: #1A2234;
+      --border: #26354D;
+      --emerald: #10B981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --cyan: #38BDF8;
+      --cyan-glow: rgba(56, 189, 248, 0.25);
+      --indigo: #818CF8;
+      --amber: #F59E0B;
+      --coral: #EF4444;
+      --text-white: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-sub: #CBD5E1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* Top Progress Bar */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--emerald), var(--cyan));
+      width: 7.14%;
+      z-index: 1000;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Deck container */
+    #deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      padding: 48px 72px 42px;
+      opacity: 0;
+      transform: scale(0.985);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      background: radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.04), transparent 45%),
+                  radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.04), transparent 45%),
+                  var(--bg-dark);
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Slide Header */
+    .slide-header {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .slide-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+      margin-bottom: 8px;
+    }
+
+    .slide-title {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .slide-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    .slide-divider {
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+      margin-top: 14px;
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slide-footer .project-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .slide-footer .badge {
+      background: var(--card-alt);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+    }
+
+    /* Controls & Overlay */
+    #nav-controls {
+      position: fixed;
+      bottom: 14px;
+      right: 72px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      color: var(--text-white);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--border);
+      border-color: var(--cyan);
+    }
+
+    /* Speaker Notes Drawer */
+    #speaker-notes-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      background: #080C14;
+      border-top: 2px solid var(--emerald);
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.6);
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 900;
+      padding: 20px 48px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    #speaker-notes-drawer.open {
+      transform: translateY(0);
+    }
+
+    .notes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--emerald);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .notes-content {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-sub);
+    }
+
+    .notes-content strong {
+      color: #fff;
+    }
+
+    /* Grid layout utilities */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .card-accent-emerald {
+      border-top: 3px solid var(--emerald);
+    }
+
+    .card-accent-cyan {
+      border-top: 3px solid var(--cyan);
+    }
+
+    .card-accent-indigo {
+      border-top: 3px solid var(--indigo);
+    }
+
+    .card-accent-coral {
+      border-top: 3px solid var(--coral);
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    ul.bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    ul.bullet-list li {
+      position: relative;
+      padding-left: 26px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-sub);
+    }
+
+    ul.bullet-list li::before {
+      content: "▸";
+      position: absolute;
+      left: 6px;
+      color: var(--emerald);
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Flow Chart Utility */
+    .flow-chain {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .flow-node {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-node-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .flow-node-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .flow-node-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .flow-arrow {
+      font-size: 20px;
+      color: var(--cyan);
+      font-weight: bold;
+    }
+
+    /* Architecture diagram */
+    .arch-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .arch-tier {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .arch-box {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .arch-box.active-tier {
+      border-color: var(--emerald);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), var(--card-bg));
+    }
+
+    .arch-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    .arch-connector {
+      text-align: center;
+      color: var(--cyan);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Print styles for PDF export */
+    @media print {
+      body {
+        overflow: visible !important;
+        height: auto !important;
+        background: #090D16 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #progress-bar, #nav-controls, #speaker-notes-drawer {
+        display: none !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        transform: none !important;
+        position: relative !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        height: 100vh !important;
+        width: 100vw !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Progress Bar -->
+  <div id="progress-bar"></div>
+
+  <div id="deck">
+
+    <!-- SLIDE 1: TITLE -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-body" style="justify-content: center; align-items: center; text-align: center;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 18px; border-radius: 999px; margin-bottom: 24px;">
+          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 10px var(--emerald);"></span>
+          <span style="color: var(--emerald); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">Mini Project Presentation • Final Evaluation</span>
+        </div>
+
+        <div style="font-size: 56px; margin-bottom: 12px;">🩺 ⚡</div>
+        <h1 style="font-size: 50px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; line-height: 1.1;">
+          Website Doctor
+        </h1>
+        <h2 style="font-size: 22px; font-weight: 600; color: var(--cyan); margin-bottom: 10px;">
+          AI-Powered Real-Time Website Monitoring & Health Analysis Platform
+        </h2>
+        <p style="font-size: 18px; color: var(--text-muted); font-style: italic; margin-bottom: 40px;">
+          “Your Website’s Digital Doctor”
+        </p>
+
+        <div style="display: flex; gap: 24px; max-width: 800px; width: 100%; justify-content: center;">
+          <div class="card" style="padding: 16px 28px; border-top: 3px solid var(--emerald); min-width: 260px; text-align: left;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">Presented By</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">Piyush Raj</div>
+            <div style="font-size: 12px; color: var(--emerald); margin-top: 2px;">Lead Developer & Presenter</div>
+          </div>
+          <div class="card" style="padding: 16px 28px; border-top: 3px solid var(--cyan); min-width: 260px; text-align: left;">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">Department / College</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">Computer Science & Engineering</div>
+            <div style="font-size: 12px; color: var(--cyan); margin-top: 2px;">Mini Project Semester Evaluation</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor Project Presentation</div>
+        <div>Press <kbd style="background: #1E293B; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);">Space</kbd> or <kbd style="background: #1E293B; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);">→</kbd> for next slide | <kbd style="background: #1E293B; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);">S</kbd> for Speaker Notes</div>
+        <div>1 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: INTRODUCTION -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 02 • Overview</div>
+        <h2 class="slide-title">Introduction: Why Website Doctor?</h2>
+        <div class="slide-subtitle">Modern websites are critical business infrastructure that require continuous health diagnosis.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2" style="align-items: center;">
+          <div>
+            <ul class="bullet-list">
+              <li><strong>Websites face frequent risks:</strong> Unplanned server downtime, slow API responses, SSL expirations, and broken configurations directly hurt revenue and user trust.</li>
+              <li><strong>Need for proactive visibility:</strong> Website owners and developers need an effortless, single-pane system to track website status in real time.</li>
+              <li><strong>The Digital Doctor Concept:</strong> Just like a medical doctor checks pulse, blood pressure, and vitals, <strong>Website Doctor</strong> continuously inspects server latency, HTTP status, SSL validity, and system health.</li>
+              <li><strong>Unified Diagnostic Dashboard:</strong> Aggregates technical metrics into one actionable, zero-clutter dashboard for both technical and non-technical stakeholders.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="card card-accent-emerald" style="padding: 28px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--cyan); text-transform: uppercase; margin-bottom: 16px;">Core Diagnostic Workflow</div>
+              <div class="flow-chain" style="flex-direction: column; gap: 14px;">
+                <div class="flow-node" style="width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px 18px;">
+                  <div style="font-size: 24px;">🌐</div>
+                  <div>
+                    <div class="flow-node-title">Target Website</div>
+                    <div class="flow-node-sub">User inputs URL to be monitored</div>
+                  </div>
+                </div>
+                <div style="color: var(--cyan); font-weight: bold;">↓</div>
+                <div class="flow-node" style="width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px 18px;">
+                  <div style="font-size: 24px;">🩺</div>
+                  <div>
+                    <div class="flow-node-title">Automated Health Check</div>
+                    <div class="flow-node-sub">Pings server, inspects SSL, measures response time</div>
+                  </div>
+                </div>
+                <div style="color: var(--cyan); font-weight: bold;">↓</div>
+                <div class="flow-node" style="width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px 18px;">
+                  <div style="font-size: 24px;">🧠</div>
+                  <div>
+                    <div class="flow-node-title">Smart Diagnosis</div>
+                    <div class="flow-node-sub">Weighted 0–100 scoring algorithm calculates health</div>
+                  </div>
+                </div>
+                <div style="color: var(--cyan); font-weight: bold;">↓</div>
+                <div class="flow-node" style="width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px 18px; border-color: var(--emerald);">
+                  <div style="font-size: 24px;">📊</div>
+                  <div>
+                    <div class="flow-node-title" style="color: var(--emerald);">Unified Health Report</div>
+                    <div class="flow-node-sub">Real-time status streamed straight to frontend dashboard</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>2 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: PROBLEM STATEMENT -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 03 • The Challenge</div>
+        <h2 class="slide-title">Problem Statement</h2>
+        <div class="slide-subtitle">Website owners and developers struggle with fragmented, delayed, and complex monitoring tools.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-accent-coral">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--coral);">⚡</div>
+            <div class="card-title">Sudden & Silent Downtime</div>
+            <div class="card-desc">Websites crash or freeze without notice. Owners only discover outages when frustrated customers complain or abandon the site.</div>
+          </div>
+          <div class="card card-accent-coral">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--coral);">🐢</div>
+            <div class="card-title">Sluggish Server Response</div>
+            <div class="card-desc">Latency spikes degrade user experience and kill SEO rankings. Detecting slow API routes typically requires heavy tracing setups.</div>
+          </div>
+          <div class="card card-accent-coral">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--coral);">🔒</div>
+            <div class="card-title">Silent SSL Expirations</div>
+            <div class="card-desc">Expired TLS/SSL certificates trigger scary browser warning screens (ERR_CERT_DATE_INVALID), destroying business credibility.</div>
+          </div>
+          <div class="card card-accent-coral">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--coral);">🧰</div>
+            <div class="card-title">Tool Fragmentation</div>
+            <div class="card-desc">Teams juggle 4–5 disjoint tools for ping tests, SSL checking, headers, and uptime, leading to overhead and delayed troubleshooting.</div>
+          </div>
+          <div class="card card-accent-coral">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--coral);">⌛</div>
+            <div class="card-title">Delayed Incident Discovery</div>
+            <div class="card-desc">Without automated background probing, intermittent micro-outages go undetected for hours, leaking customer transactions.</div>
+          </div>
+          <div class="card card-accent-coral">
+            <div class="card-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--coral);">📉</div>
+            <div class="card-title">Steep Learning Curves</div>
+            <div class="card-desc">Enterprise platforms (Datadog, Dynatrace) are overly complex and expensive for developers, students, and small business owners.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>3 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: PROPOSED SOLUTION -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 04 • The Solution</div>
+        <h2 class="slide-title">Proposed Solution: Website Doctor</h2>
+        <div class="slide-subtitle">A streamlined, automated platform that delivers actionable website diagnostics in one click.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div style="margin-bottom: 24px;">
+          <div class="flow-chain" style="background: var(--card-bg); padding: 18px 24px; border-radius: 12px; border: 1px solid var(--border);">
+            <div class="flow-node">
+              <div class="flow-node-icon">👤</div>
+              <div class="flow-node-title">1. User Enters URL</div>
+              <div class="flow-node-sub">Zero configuration needed</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <div class="flow-node-icon">🩺</div>
+              <div class="flow-node-title">2. Website Doctor</div>
+              <div class="flow-node-sub">Web UI handles inputs</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <div class="flow-node-icon">⚙️</div>
+              <div class="flow-node-title">3. Backend Engine</div>
+              <div class="flow-node-sub">Node.js orchestrator</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <div class="flow-node-icon">🌐</div>
+              <div class="flow-node-title">4. Target Website</div>
+              <div class="flow-node-sub">Live HTTP & TLS check</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <div class="flow-node-icon">🔬</div>
+              <div class="flow-node-title">5. Health Analysis</div>
+              <div class="flow-node-sub">Latency & SSL scoring</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color: var(--emerald);">
+              <div class="flow-node-icon">📊</div>
+              <div class="flow-node-title" style="color: var(--emerald);">6. Live Dashboard</div>
+              <div class="flow-node-sub">SSE real-time stream</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card card-accent-cyan">
+            <div class="card-title">⚡ Instant Diagnostic Ping</div>
+            <div class="card-desc">Type any web URL and receive a full health audit within seconds: availability, SSL security status, and response latency.</div>
+          </div>
+          <div class="card card-accent-emerald">
+            <div class="card-title">🔄 Continuous Background Monitor</div>
+            <div class="card-desc">The backend monitoring worker checks target websites automatically at configured intervals without manual intervention.</div>
+          </div>
+          <div class="card card-accent-indigo">
+            <div class="card-title">💡 Plain English Insights</div>
+            <div class="card-desc">Clear, beginner-friendly diagnostic messages explain root causes so non-technical website owners can resolve issues fast.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>4 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: OBJECTIVES -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 05 • Goals</div>
+        <h2 class="slide-title">Project Objectives</h2>
+        <div class="slide-subtitle">Six core technical and practical goals achieved by Website Doctor.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-accent-emerald">
+            <div style="font-size: 28px; font-weight: 800; color: var(--emerald); margin-bottom: 8px;">01</div>
+            <div class="card-title">Monitor Availability</div>
+            <div class="card-desc">Track real-time uptime and detect instant downtime across any public website or API endpoint.</div>
+          </div>
+          <div class="card card-accent-cyan">
+            <div style="font-size: 28px; font-weight: 800; color: var(--cyan); margin-bottom: 8px;">02</div>
+            <div class="card-title">Measure Latency</div>
+            <div class="card-desc">Accurately record Time-to-First-Byte (TTFB) and overall server response times in milliseconds.</div>
+          </div>
+          <div class="card card-accent-indigo">
+            <div style="font-size: 28px; font-weight: 800; color: var(--indigo); margin-bottom: 8px;">03</div>
+            <div class="card-title">Inspect HTTP/HTTPS</div>
+            <div class="card-desc">Verify standard status codes (200 OK, 301 Redirect, 404, 500) and redirect configurations.</div>
+          </div>
+          <div class="card card-accent-amber">
+            <div style="font-size: 28px; font-weight: 800; color: var(--amber); margin-bottom: 8px;">04</div>
+            <div class="card-title">Validate SSL/TLS</div>
+            <div class="card-desc">Inspect SSL certificate validity, issuer information, protocol security, and expiry countdown.</div>
+          </div>
+          <div class="card card-accent-emerald">
+            <div style="font-size: 28px; font-weight: 800; color: var(--emerald); margin-bottom: 8px;">05</div>
+            <div class="card-title">Compute Health Score</div>
+            <div class="card-desc">Generate an intuitive 0–100 overall health score using a multi-factor weighted diagnostic formula.</div>
+          </div>
+          <div class="card card-accent-cyan">
+            <div style="font-size: 28px; font-weight: 800; color: var(--cyan); margin-bottom: 8px;">06</div>
+            <div class="card-title">Real-Time Updates</div>
+            <div class="card-desc">Deliver live status push to user dashboards using Server-Sent Events (SSE) without manual reloads.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>5 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: KEY FEATURES -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 06 • Capabilities</div>
+        <h2 class="slide-title">Key System Features</h2>
+        <div class="slide-subtitle">Comprehensive toolkit built into Website Doctor. Real-Time Monitoring is the core engine.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3" style="gap: 16px;">
+          <div class="card" style="border: 2px solid var(--emerald); background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), var(--card-bg));">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 24px;">⚡</span>
+              <span style="background: var(--emerald); color: #000; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 999px; text-transform: uppercase;">Flagship Feature</span>
+            </div>
+            <div class="card-title" style="color: var(--emerald);">Real-Time Monitoring</div>
+            <div class="card-desc">Continuous automated probing with live Server-Sent Events (SSE) streaming state changes directly to the UI.</div>
+          </div>
+          <div class="card card-accent-cyan">
+            <div style="font-size: 24px; margin-bottom: 8px;">🟢</div>
+            <div class="card-title">Uptime & Availability</div>
+            <div class="card-desc">Immediate outage detection with clear visual status indicators (ONLINE / SLOW / DOWN).</div>
+          </div>
+          <div class="card card-accent-indigo">
+            <div style="font-size: 24px; margin-bottom: 8px;">⏱️</div>
+            <div class="card-title">Response Time Tracker</div>
+            <div class="card-desc">Precise millisecond-level server response benchmarking with performance warning thresholds.</div>
+          </div>
+          <div class="card card-accent-amber">
+            <div style="font-size: 24px; margin-bottom: 8px;">📡</div>
+            <div class="card-title">HTTP Status Code Audits</div>
+            <div class="card-desc">Monitors HTTP 2xx, 3xx redirects, 4xx client issues, and 5xx backend server faults.</div>
+          </div>
+          <div class="card card-accent-cyan">
+            <div style="font-size: 24px; margin-bottom: 8px;">🔒</div>
+            <div class="card-title">HTTPS / SSL Health Check</div>
+            <div class="card-desc">Verifies SSL cipher validity, expiration countdown, and secure connection certificates.</div>
+          </div>
+          <div class="card card-accent-emerald">
+            <div style="font-size: 24px; margin-bottom: 8px;">🩺</div>
+            <div class="card-title">0–100 Health Score</div>
+            <div class="card-desc">Algorithmic rating synthesizing uptime, latency, and security into one comprehensive grade.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>6 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: HOW IT WORKS -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 07 • Workflow</div>
+        <h2 class="slide-title">How It Works: Step-by-Step Diagnostic Pipeline</h2>
+        <div class="slide-subtitle">Clear sequence from user input to real-time dashboard health feedback.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3" style="gap: 16px;">
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(56, 189, 248, 0.15); color: var(--cyan); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">1</span>
+              <div class="card-title" style="margin-bottom: 0;">User Enters URL</div>
+            </div>
+            <div class="card-desc">User provides target web domain (e.g., https://example.com) on the clean dashboard.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(56, 189, 248, 0.15); color: var(--cyan); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">2</span>
+              <div class="card-title" style="margin-bottom: 0;">API Ingestion</div>
+            </div>
+            <div class="card-desc">Node.js Express backend validates URL syntax and queues an immediate diagnostic probe.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(56, 189, 248, 0.15); color: var(--cyan); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">3</span>
+              <div class="card-title" style="margin-bottom: 0;">Target Server Ping</div>
+            </div>
+            <div class="card-desc">Backend sends non-invasive HTTP GET/HEAD probes directly to the host server.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(16, 185, 129, 0.15); color: var(--emerald); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">4</span>
+              <div class="card-title" style="margin-bottom: 0;">Latency Measurement</div>
+            </div>
+            <div class="card-desc">High-resolution timers record DNS resolution, socket connect, and response arrival.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(16, 185, 129, 0.15); color: var(--emerald); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">5</span>
+              <div class="card-title" style="margin-bottom: 0;">SSL & Header Analysis</div>
+            </div>
+            <div class="card-desc">TLS handshake details, certificate expiry, and security response headers are parsed.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(16, 185, 129, 0.15); color: var(--emerald); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">6</span>
+              <div class="card-title" style="margin-bottom: 0;">Health Score Engine</div>
+            </div>
+            <div class="card-desc">Diagnostic logic computes an aggregated health score between 0 and 100.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(129, 140, 248, 0.15); color: var(--indigo); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">7</span>
+              <div class="card-title" style="margin-bottom: 0;">Results on Dashboard</div>
+            </div>
+            <div class="card-desc">Health cards, metrics, and diagnoses render instantly on the React client.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(129, 140, 248, 0.15); color: var(--indigo); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">8</span>
+              <div class="card-title" style="margin-bottom: 0;">Worker Heartbeat</div>
+            </div>
+            <div class="card-desc">Background daemon re-inspects target sites regularly to detect changes.</div>
+          </div>
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="background: rgba(129, 140, 248, 0.15); color: var(--indigo); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">9</span>
+              <div class="card-title" style="margin-bottom: 0;">Live Event Stream</div>
+            </div>
+            <div class="card-desc">Status transitions push via SSE to the browser without refreshing the page.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>7 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: SYSTEM ARCHITECTURE -->
+    <div class="slide" id="slide-8">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 08 • Architecture</div>
+        <h2 class="slide-title">System Architecture</h2>
+        <div class="slide-subtitle">Full-stack modular decoupling with real-time bidirectional push updates.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="arch-container">
+          <div class="arch-tier">
+            <div class="arch-box" style="border-color: var(--cyan);">
+              <span style="font-size: 28px;">👤</span>
+              <div>
+                <div style="font-size: 16px; font-weight: 700; color: #fff;">Client / Web User</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Web browser on Desktop or Mobile device</div>
+              </div>
+              <span class="arch-badge" style="color: var(--cyan); background: rgba(56, 189, 248, 0.1);">Client Tier</span>
+            </div>
+          </div>
+
+          <div class="arch-connector">↕ REST API Requests / SSE Live Stream</div>
+
+          <div class="arch-tier">
+            <div class="arch-box active-tier">
+              <span style="font-size: 28px;">💻</span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; font-weight: 700; color: var(--emerald);">Frontend Dashboard (React 18 + Vite)</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Reactive UI, state management, live metrics cards, responsive dark theme</div>
+              </div>
+              <span class="arch-badge" style="color: var(--emerald); background: rgba(16, 185, 129, 0.1);">Presentation Tier</span>
+            </div>
+          </div>
+
+          <div class="arch-connector">↕ JSON REST Endpoints & Server-Sent Events (SSE)</div>
+
+          <div class="arch-tier" style="gap: 16px;">
+            <div class="arch-box" style="flex: 1.2; border-color: var(--indigo);">
+              <span style="font-size: 28px;">⚙️</span>
+              <div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--indigo);">Backend API & Worker (Node.js + Express)</div>
+                <div style="font-size: 11px; color: var(--text-muted);">HTTP probe engine, SSL inspector, health scoring, cron scheduler</div>
+              </div>
+            </div>
+            <div class="arch-box" style="flex: 0.8; border-color: var(--amber);">
+              <span style="font-size: 28px;">🗄️</span>
+              <div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--amber);">Database Storage</div>
+                <div style="font-size: 11px; color: var(--text-muted);">PGlite / PostgreSQL relational check history</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-connector">↓ Non-Invasive Diagnostic Probing</div>
+
+          <div class="arch-tier">
+            <div class="arch-box" style="border-color: var(--border);">
+              <span style="font-size: 28px;">🌐</span>
+              <div style="flex: 1;">
+                <div style="font-size: 16px; font-weight: 700; color: #fff;">Target Website(s) Under Monitoring</div>
+                <div style="font-size: 12px; color: var(--text-muted);">Public internet websites, web applications, and REST APIs</div>
+              </div>
+              <span class="arch-badge">Target Tier</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>8 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: TECHNOLOGIES USED -->
+    <div class="slide" id="slide-9">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 09 • Tech Stack</div>
+        <h2 class="slide-title">Technologies Used</h2>
+        <div class="slide-subtitle">Modern, lightweight, production-grade technology stack actually deployed in the project.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card card-accent-cyan">
+            <div class="card-icon" style="background: rgba(56, 189, 248, 0.1); color: var(--cyan);">⚛️</div>
+            <div class="card-title">Frontend</div>
+            <ul class="bullet-list" style="font-size: 13px; gap: 8px;">
+              <li><strong>React 18:</strong> Component-driven reactive UI architecture</li>
+              <li><strong>Vite:</strong> Ultra-fast build tool and bundler</li>
+              <li><strong>Vanilla CSS:</strong> Tailored dark-mode glassmorphic design</li>
+              <li><strong>JavaScript (ES6+):</strong> Modern asynchronous logic</li>
+            </ul>
+          </div>
+          <div class="card card-accent-emerald">
+            <div class="card-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--emerald);">🟢</div>
+            <div class="card-title">Backend</div>
+            <ul class="bullet-list" style="font-size: 13px; gap: 8px;">
+              <li><strong>Node.js:</strong> Fast asynchronous non-blocking runtime</li>
+              <li><strong>Express:</strong> Lightweight REST API routing framework</li>
+              <li><strong>TypeScript:</strong> Static typing & robust enterprise logic</li>
+              <li><strong>Worker Daemon:</strong> Background monitoring scheduler</li>
+            </ul>
+          </div>
+          <div class="card card-accent-amber">
+            <div class="card-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--amber);">🗄️</div>
+            <div class="card-title">Database</div>
+            <ul class="bullet-list" style="font-size: 13px; gap: 8px;">
+              <li><strong>PGlite / Postgres:</strong> In-process & cloud PostgreSQL storage</li>
+              <li><strong>Structured Schema:</strong> Sites, health logs, & event records</li>
+              <li><strong>Time-Series Logs:</strong> Stores latency and historical uptime</li>
+            </ul>
+          </div>
+          <div class="card card-accent-indigo">
+            <div class="card-icon" style="background: rgba(129, 140, 248, 0.1); color: var(--indigo);">☁️</div>
+            <div class="card-title">Cloud & Networking</div>
+            <ul class="bullet-list" style="font-size: 13px; gap: 8px;">
+              <li><strong>Vercel:</strong> Global edge CDN frontend deployment</li>
+              <li><strong>Render:</strong> Cloud backend web service hosting</li>
+              <li><strong>GitHub:</strong> CI/CD version control repository</li>
+              <li><strong>SSE:</strong> Server-Sent Events live state stream</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>9 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: DASHBOARD / UI -->
+    <div class="slide" id="slide-10">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 10 • User Interface</div>
+        <h2 class="slide-title">Dashboard & Health Analysis UI</h2>
+        <div class="slide-subtitle">Intuitive, high-contrast dashboard delivering instant diagnostic visibility.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="card" style="padding: 20px; background: #0c1322; border-color: var(--border);">
+          <!-- Top Mockup Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 20px;">🩺</span>
+              <span style="font-weight: 700; font-size: 16px;">Website Doctor Dashboard</span>
+              <span style="background: #1e293b; color: var(--cyan); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">https://pixelpiyushh.github.io</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald);"></span>
+              <span style="font-size: 12px; font-weight: 700; color: var(--emerald);">STATUS: ONLINE</span>
+            </div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="grid-4" style="margin-bottom: 16px;">
+            <div class="card" style="padding: 14px; background: var(--card-bg);">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Overall Health Score</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--emerald); margin-top: 4px;">87 <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">/ 100</span></div>
+              <div style="font-size: 11px; color: var(--emerald); margin-top: 2px;">● Healthy Status</div>
+            </div>
+            <div class="card" style="padding: 14px; background: var(--card-bg);">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Response Time</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--cyan); margin-top: 4px;">214 <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">ms</span></div>
+              <div style="font-size: 11px; color: var(--cyan); margin-top: 2px;">⚡ Optimal TTFB</div>
+            </div>
+            <div class="card" style="padding: 14px; background: var(--card-bg);">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">HTTP Status</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--emerald); margin-top: 4px;">200 <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">OK</span></div>
+              <div style="font-size: 11px; color: var(--emerald); margin-top: 2px;">✓ Valid Protocol</div>
+            </div>
+            <div class="card" style="padding: 14px; background: var(--card-bg);">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">SSL Security</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--emerald); margin-top: 4px;">VALID</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">🔒 Expires in 78 days</div>
+            </div>
+          </div>
+
+          <!-- Bottom Split: Diagnostics & Timeline -->
+          <div class="grid-2">
+            <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--text-white); margin-bottom: 8px;">Doctor's Diagnosis & Recommendations</div>
+              <ul style="list-style: none; font-size: 12px; color: var(--text-sub); display: flex; flex-direction: column; gap: 6px;">
+                <li style="color: var(--emerald);">✓ Server response is within optimal bounds (&lt; 300ms)</li>
+                <li style="color: var(--emerald);">✓ TLS 1.3 encryption enabled with trusted CA</li>
+                <li style="color: var(--amber);">! Enable Gzip/Brotli compression to shave 40ms off payload</li>
+              </ul>
+            </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--text-white); margin-bottom: 8px;">Recent Monitoring Activity (Live)</div>
+              <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">
+                <div>[01:14:10] 🟢 Checked target URL — HTTP 200 OK (214ms)</div>
+                <div>[01:13:40] 🟢 Checked target URL — HTTP 200 OK (208ms)</div>
+                <div>[01:13:10] 🟢 Checked target URL — HTTP 200 OK (220ms)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>10 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: REAL-TIME MONITORING -->
+    <div class="slide" id="slide-11">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 11 • Live Monitoring</div>
+        <h2 class="slide-title">Real-Time Monitoring in Action</h2>
+        <div class="slide-subtitle">Continuous daemon inspection captures performance degradation and outages immediately.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="card" style="padding: 24px; margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--cyan); text-transform: uppercase; margin-bottom: 16px;">Incident Timeline Simulation</div>
+          <div style="display: flex; justify-content: space-between; position: relative;">
+            <div style="position: absolute; top: 18px; left: 40px; right: 40px; height: 2px; background: var(--border); z-index: 1;"></div>
+            
+            <div style="position: relative; z-index: 2; text-align: center;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid var(--emerald); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">🟢</div>
+              <div style="font-weight: 700; font-size: 13px;">10:00 AM</div>
+              <div style="font-size: 12px; color: var(--emerald);">Online</div>
+              <div style="font-size: 10px; color: var(--text-muted);">180ms • 200 OK</div>
+            </div>
+
+            <div style="position: relative; z-index: 2; text-align: center;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid var(--emerald); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">🟢</div>
+              <div style="font-weight: 700; font-size: 13px;">10:05 AM</div>
+              <div style="font-size: 12px; color: var(--emerald);">Online</div>
+              <div style="font-size: 10px; color: var(--text-muted);">195ms • 200 OK</div>
+            </div>
+
+            <div style="position: relative; z-index: 2; text-align: center;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(245, 158, 11, 0.2); border: 2px solid var(--amber); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">🟡</div>
+              <div style="font-weight: 700; font-size: 13px;">10:10 AM</div>
+              <div style="font-size: 12px; color: var(--amber);">Slow Response</div>
+              <div style="font-size: 10px; color: var(--text-muted);">1450ms • High Latency</div>
+            </div>
+
+            <div style="position: relative; z-index: 2; text-align: center;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); border: 2px solid var(--coral); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">🔴</div>
+              <div style="font-weight: 700; font-size: 13px;">10:15 AM</div>
+              <div style="font-size: 12px; color: var(--coral);">Website Down</div>
+              <div style="font-size: 10px; color: var(--text-muted);">502 Bad Gateway</div>
+            </div>
+
+            <div style="position: relative; z-index: 2; text-align: center;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); border: 2px solid var(--coral); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">🔴</div>
+              <div style="font-weight: 700; font-size: 13px;">10:20 AM</div>
+              <div style="font-size: 12px; color: var(--coral);">Website Down</div>
+              <div style="font-size: 10px; color: var(--text-muted);">Timeout (5000ms)</div>
+            </div>
+
+            <div style="position: relative; z-index: 2; text-align: center;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid var(--emerald); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">🟢</div>
+              <div style="font-weight: 700; font-size: 13px;">10:25 AM</div>
+              <div style="font-size: 12px; color: var(--emerald);">Back Online</div>
+              <div style="font-size: 10px; color: var(--text-muted);">210ms • Recovered</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card card-accent-emerald">
+            <div class="card-title">How Real-Time Push Works</div>
+            <div class="card-desc">Instead of forcing the user to hit F5/Refresh, the frontend establishes a lightweight <strong>Server-Sent Events (SSE)</strong> connection. When the backend detects any state transition (e.g., from Online to Slow), the dashboard updates instantly.</div>
+          </div>
+          <div class="card card-accent-cyan">
+            <div class="card-title">Incident Detection & Recovery Log</div>
+            <div class="card-desc">Every outage event is timestamped. Teams can review exact downtime duration, failure codes, and recovery timestamps to calculate true availability percentages.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>11 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: USE CASES -->
+    <div class="slide" id="slide-12">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 12 • Applications</div>
+        <h2 class="slide-title">Target Users & Practical Use Cases</h2>
+        <div class="slide-subtitle">Who benefits most from deploying Website Doctor?</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-accent-cyan">
+            <div style="font-size: 26px; margin-bottom: 8px;">💻</div>
+            <div class="card-title">Website Developers</div>
+            <div class="card-desc">Verify that newly deployed code, DNS configurations, and SSL certificates work seamlessly across production and staging environments.</div>
+          </div>
+          <div class="card card-accent-emerald">
+            <div style="font-size: 26px; margin-bottom: 8px;">🏢</div>
+            <div class="card-title">Website & Store Owners</div>
+            <div class="card-desc">Ensure e-commerce storefronts and customer portals are 100% available without hiring dedicated DevOps engineers.</div>
+          </div>
+          <div class="card card-accent-indigo">
+            <div style="font-size: 26px; margin-bottom: 8px;">🚀</div>
+            <div class="card-title">Startups & SaaS Founders</div>
+            <div class="card-desc">Keep customer-facing landing pages and backend APIs online with zero expensive infrastructure management overhead.</div>
+          </div>
+          <div class="card card-accent-amber">
+            <div style="font-size: 26px; margin-bottom: 8px;">🛡️</div>
+            <div class="card-title">Small IT & Ops Teams</div>
+            <div class="card-desc">Centralize monitoring of client portfolios, internal portals, and vendor endpoints inside one unified dashboard.</div>
+          </div>
+          <div class="card card-accent-cyan">
+            <div style="font-size: 26px; margin-bottom: 8px;">📈</div>
+            <div class="card-title">SEO Specialists</div>
+            <div class="card-desc">Protect Google rankings by catching latency spikes and HTTPS cert expiration warnings before web crawlers penalize the domain.</div>
+          </div>
+          <div class="card card-accent-emerald">
+            <div style="font-size: 26px; margin-bottom: 8px;">🎓</div>
+            <div class="card-title">Students & Learners</div>
+            <div class="card-desc">Study full-stack real-time web development, network probing, HTTP headers, TLS handshakes, and cloud deployment pipelines.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>12 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: ADVANTAGES & FUTURE SCOPE -->
+    <div class="slide" id="slide-13">
+      <div class="slide-header">
+        <div class="slide-tag">Slide 13 • Evaluation</div>
+        <h2 class="slide-title">Advantages & Future Scope</h2>
+        <div class="slide-subtitle">Clear distinction between current project deliverables and future development roadmap.</div>
+        <div class="slide-divider"></div>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <!-- Left: Implemented Advantages -->
+          <div class="card card-accent-emerald">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <span style="font-size: 20px;">✅</span>
+              <div style="font-size: 18px; font-weight: 700; color: var(--emerald);">Current Project Advantages</div>
+            </div>
+            <ul class="bullet-list" style="font-size: 14px;">
+              <li><strong>Zero Installation / Frictionless:</strong> Input any URL into the web dashboard and get instant diagnostic feedback.</li>
+              <li><strong>Single Centralized Dashboard:</strong> Replaces 4 separate tools for ping, HTTP headers, SSL validity, and latency.</li>
+              <li><strong>Real-Time SSE Live Updates:</strong> Real-time event streaming keeps users updated without page reloads.</li>
+              <li><strong>Plain-English Health Score:</strong> Intuitive 0–100 score makes technical status easily understandable to anyone.</li>
+              <li><strong>Modern Dark Aesthetic:</strong> High visual clarity suitable for developer workspaces and presentation displays.</li>
+            </ul>
+          </div>
+
+          <!-- Right: Future Scope -->
+          <div class="card card-accent-indigo">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <span style="font-size: 20px;">🚀</span>
+              <div style="font-size: 18px; font-weight: 700; color: var(--indigo);">Future Scope & Roadmap</div>
+            </div>
+            <ul class="bullet-list" style="font-size: 14px;">
+              <li><strong>AI-Powered Root Cause Diagnosis:</strong> Integrate LLMs to analyze stack traces and recommend exact code/server fixes.</li>
+              <li><strong>Multi-Channel Alerting:</strong> Implement instant Email, SMS, Discord, and WhatsApp incident webhooks.</li>
+              <li><strong>Global Multi-Region Probes:</strong> Measure server latency simultaneously from USA, Europe, and Asia-Pacific.</li>
+              <li><strong>Deep SEO & Security Audits:</strong> Scan for missing security headers (CSP, HSTS) and broken page hyperlinks.</li>
+              <li><strong>Multi-Tenant Portfolio Monitoring:</strong> Allow organizations to organize and monitor 50+ websites in grouped teams.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>13 / 14</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: CONCLUSION -->
+    <div class="slide" id="slide-14">
+      <div class="slide-body" style="justify-content: center; align-items: center; text-align: center;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 18px; border-radius: 999px; margin-bottom: 24px;">
+          <span style="color: var(--emerald); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">Conclusion & Project Summary</span>
+        </div>
+
+        <h2 style="font-size: 38px; font-weight: 800; letter-spacing: -0.02em; max-width: 900px; line-height: 1.3; margin-bottom: 28px;">
+          “Website Doctor provides a simple, unified way to monitor and understand website health in real time.”
+        </h2>
+
+        <p style="font-size: 16px; color: var(--text-sub); max-width: 780px; line-height: 1.6; margin-bottom: 40px;">
+          By combining uptime tracking, server response latency, HTTP/HTTPS status, and SSL certificate inspection into an intuitive single-pane dashboard, Website Doctor makes web health accessible to developers and non-technical stakeholders alike.
+        </p>
+
+        <div style="display: flex; gap: 24px; justify-content: center; margin-bottom: 36px;">
+          <div class="card" style="padding: 16px 36px; border-color: var(--emerald); text-align: center;">
+            <div style="font-size: 32px; font-weight: 800; color: #fff;">Thank You!</div>
+            <div style="font-size: 13px; color: var(--emerald); margin-top: 4px;">Piyush Raj • Computer Science & Engineering</div>
+          </div>
+          <div class="card" style="padding: 16px 36px; border-color: var(--cyan); text-align: center;">
+            <div style="font-size: 32px; font-weight: 800; color: var(--cyan);">Questions?</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Open for Viva Q&A and Faculty Discussion</div>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+          Live Demo: https://website-doctor-bmka.vercel.app • GitHub: pixelpiyushh/-website-doctor
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Website Doctor — AI-Powered Website Health Platform</div>
+        <div>Presented by: Piyush Raj | Mini Project</div>
+        <div>14 / 14</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Floating Navigation Controls -->
+  <div id="nav-controls">
+    <button class="nav-btn" id="btn-prev" title="Previous Slide (Left Arrow)">❮</button>
+    <button class="nav-btn" id="btn-next" title="Next Slide (Right Arrow / Space)">❯</button>
+    <button class="nav-btn" id="btn-notes" title="Toggle Speaker Notes (S)">📝</button>
+    <button class="nav-btn" id="btn-fs" title="Toggle Fullscreen (F)">⛶</button>
+  </div>
+
+  <!-- Speaker Notes Drawer -->
+  <div id="speaker-notes-drawer">
+    <div class="notes-header">
+      <span id="notes-title">SPEAKER NOTES — SLIDE 1</span>
+      <span style="font-size: 10px; color: var(--text-muted); cursor: pointer;" onclick="toggleNotes()">CLOSE [S]</span>
+    </div>
+    <div class="notes-content" id="notes-text">
+      Loading speaker notes...
+    </div>
+  </div>
+
+  <script>
+    const speakerNotes = {
+      1: "Good morning/afternoon respected teachers and evaluators. My name is Piyush Raj, and today I am excited to present my mini-project: 'Website Doctor – AI-Powered Real-Time Website Monitoring & Health Analysis Platform'. The core vision of this project is to act as a digital doctor for websites—detecting slowdowns, downtime, and security vulnerabilities before they affect real users.",
+      2: "Let's begin with the introduction. Just like humans need regular medical checkups to stay healthy, websites also need continuous health monitoring. Websites often suffer from sudden downtime, slow page loads, and expiring SSL certificates. Website Doctor acts like a doctor for websites: it pings the server, measures vitals like response time and SSL, diagnoses problems, and gives an easy-to-understand health report.",
+      3: "Now let's examine the problem statement. Why do we need this? First, websites can crash silently, and owners often only find out when customers complain. Second, slow response times ruin user experience and hurt search rankings. Third, checking uptime, SSL, headers, and latency usually requires 4 or 5 different complicated tools. Website Doctor solves this by bringing everything together.",
+      4: "Here is our proposed solution. The user simply enters any website URL. Website Doctor's backend immediately pings the target website, inspects its SSL certificate, measures server latency, calculates a health score, and displays everything on a clean, real-time dashboard without requiring deep technical knowledge.",
+      5: "These are our six key project objectives: 1. Monitor real-time availability. 2. Measure server response time in milliseconds. 3. Check HTTP/HTTPS status codes. 4. Inspect SSL/TLS certificate validity. 5. Calculate an aggregated 0 to 100 Health Score. And 6. Provide live status updates to the user.",
+      6: "Looking at the key features: our standout flagship feature is Real-Time Monitoring using background workers and Server-Sent Events. In addition, the system checks uptime, tracks response latency, verifies HTTPS/SSL, calculates a health score, and provides a clean dashboard that anyone can use.",
+      7: "This flowchart explains how Website Doctor works step by step: 1. The user inputs a URL. 2. The backend receives the request. 3. The server sends a lightweight probe. 4. Latency is measured. 5. SSL and headers are checked. 6. The health score is computed. 7. Results appear on the dashboard. 8. A background worker continues to monitor the site, pushing live updates whenever status changes.",
+      8: "Here is the system architecture. It follows a clean 3-tier structure. The presentation tier is built with React and Vite. The backend API is built using Node.js and Express. It connects to an embedded database for history logs, and continuously probes target websites while streaming live status back to the frontend using Server-Sent Events.",
+      9: "Here are the technologies we actually used in this project: For frontend, React 18, Vite, and custom CSS. For backend, Node.js and Express with TypeScript. For storage, PGlite/PostgreSQL-compatible database. For hosting and CI/CD, GitHub, Vercel for frontend, and Render for backend.",
+      10: "This is our actual dashboard interface. At a glance, it shows the target URL, overall health score—for example, 87 out of 100—current status ONLINE, response time in milliseconds, HTTP status code 200 OK, and SSL certificate validity with expiration days.",
+      11: "Here is real-time monitoring in action. Notice this timeline: at 10:00 and 10:05 the site is healthy. At 10:10 response slows down to 1450ms. At 10:15 the server crashes with a 502 error. At 10:25 it comes back online. The key advantage is that our system detects these transitions automatically in the background and updates the UI in real time via SSE.",
+      12: "Website Doctor has wide practical utility. Developers can verify fresh deployments; e-commerce and business owners can protect their revenue; startups can monitor their APIs; IT teams can track client websites; and students can learn full-stack networking.",
+      13: "Looking at advantages and future scope: today, Website Doctor provides a centralized, real-time, zero-configuration dashboard with simple health scores. In the future, we plan to integrate AI-driven root cause diagnosis using LLMs, multi-channel SMS/WhatsApp alerts, and multi-region probing from global servers.",
+      14: "To conclude, Website Doctor provides a simple and effective platform to monitor and understand website health in real time. Thank you very much for your time and attention. I am now happy to take any questions."
+    };
+
+    let currentSlide = 1;
+    const totalSlides = 14;
+
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progress-bar');
+    const notesDrawer = document.getElementById('speaker-notes-drawer');
+    const notesTitle = document.getElementById('notes-title');
+    const notesText = document.getElementById('notes-text');
+
+    function showSlide(n) {
+      if (n < 1) n = 1;
+      if (n > totalSlides) n = totalSlides;
+      currentSlide = n;
+
+      slides.forEach((s, idx) => {
+        if (idx === currentSlide - 1) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+
+      progressBar.style.width = ((currentSlide / totalSlides) * 100) + '%';
+      updateNotes();
+    }
+
+    function updateNotes() {
+      notesTitle.innerText = `SPEAKER NOTES — SLIDE ${currentSlide} OF ${totalSlides}`;
+      notesText.innerHTML = speakerNotes[currentSlide] || "No notes available.";
+    }
+
+    function toggleNotes() {
+      notesDrawer.classList.toggle('open');
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {});
+      } else {
+        document.exitFullscreen().catch(err => {});
+      }
+    }
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        showSlide(currentSlide + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        e.preventDefault();
+        showSlide(currentSlide - 1);
+      } else if (e.key === 's' || e.key === 'S') {
+        toggleNotes();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      } else if (e.key === 'Escape') {
+        notesDrawer.classList.remove('open');
+      }
+    });
+
+    document.getElementById('btn-next').addEventListener('click', () => showSlide(currentSlide + 1));
+    document.getElementById('btn-prev').addEventListener('click', () => showSlide(currentSlide - 1));
+    document.getElementById('btn-notes').addEventListener('click', toggleNotes);
+    document.getElementById('btn-fs').addEventListener('click', toggleFullscreen);
+
+    updateNotes();
+  </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Activity, Bell, Search, Sparkles, Menu, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Activity, Bell, Search, Sparkles, Menu, ShieldAlert, CheckCircle2, Globe2 } from 'lucide-react';
 import { AlertLogEvent } from '../types';
+import { useLanguage } from '../i18n';
 
 interface NavbarProps {
   activeView: string;
@@ -28,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleSidebar,
   ownerProfile,
 }) => {
+  const { language, setLanguage, t } = useLanguage();
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = alerts.filter((a) => !a.read).length;
 
@@ -47,16 +49,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div
           className="badge"
           style={{
-            backgroundColor: isSSEConnected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-            color: isSSEConnected ? 'var(--accent-primary)' : 'var(--status-down)',
-            border: `1px solid ${isSSEConnected ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
+            backgroundColor: isSSEConnected ? 'rgba(22, 163, 74, 0.12)' : 'rgba(244, 63, 94, 0.1)',
+            color: isSSEConnected ? '#16a34a' : 'var(--status-down)',
+            border: `1px solid ${isSSEConnected ? 'rgba(22, 163, 74, 0.35)' : 'rgba(244, 63, 94, 0.25)'}`,
             fontSize: '0.74rem',
             padding: '3px 9px',
           }}
           title={isSSEConnected ? 'Real-time telemetry stream connected' : 'Connecting to live events...'}
         >
-          <span className="pulse-dot" />
-          {isSSEConnected ? 'Live Real-time' : 'Reconnecting...'}
+          <span className="pulse-dot" style={{ backgroundColor: '#16a34a' }} />
+          {isSSEConnected ? t.liveTelemetry : t.reconnecting}
         </div>
 
         {/* Demo Data Badge */}
@@ -72,12 +74,67 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           >
             <Sparkles size={12} />
-            Demo Data Active
+            {t.demoActive}
           </div>
         )}
       </div>
 
       <div className="top-navbar-right">
+        {/* Language Switcher: 1st English | 2nd Hinglish */}
+        <div
+          className="lang-switcher"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            borderRadius: 'var(--radius-full)',
+            padding: '2px 3px',
+            border: '1px solid rgba(192, 132, 252, 0.3)',
+            gap: '2px',
+          }}
+          title="Select Language / Bhasha Chuniye (English / Hinglish)"
+        >
+          <button
+            type="button"
+            className={`btn btn-sm ${language === 'en' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setLanguage('en')}
+            style={{
+              padding: '2px 8px',
+              fontSize: '0.72rem',
+              fontWeight: language === 'en' ? 700 : 500,
+              borderRadius: 'var(--radius-full)',
+              height: '24px',
+              minHeight: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <span style={{ fontSize: '0.78rem' }}>🌐</span>
+            <span>English</span>
+          </button>
+
+          <button
+            type="button"
+            className={`btn btn-sm ${language === 'hinglish' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setLanguage('hinglish')}
+            style={{
+              padding: '2px 8px',
+              fontSize: '0.72rem',
+              fontWeight: language === 'hinglish' ? 700 : 500,
+              borderRadius: 'var(--radius-full)',
+              height: '24px',
+              minHeight: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <span style={{ fontSize: '0.78rem' }}>🇮🇳</span>
+            <span>Hinglish</span>
+          </button>
+        </div>
+
         {/* Toggle Demo Mode button */}
         <button
           className={`btn btn-sm ${isDemoMode ? 'btn-secondary' : 'btn-ghost'}`}
@@ -86,13 +143,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Toggle between real live monitoring and simulated demo showcase"
         >
           <Sparkles size={14} style={{ color: isDemoMode ? '#818cf8' : 'var(--text-muted)' }} />
-          {isDemoMode ? 'Exit Demo' : 'Demo Mode'}
+          {isDemoMode ? t.exitDemo : t.demoMode}
         </button>
 
         {/* Quick Check button */}
         <button className="btn btn-primary btn-sm" onClick={onOpenQuickScan}>
           <Activity size={14} />
-          Diagnose URL
+          {t.diagnoseBtn}
         </button>
 
         {/* Owner Profile Chip */}

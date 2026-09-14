@@ -8,6 +8,7 @@ import { SEOHealthView } from './SEOHealthView';
 import { AIDoctorView } from './AIDoctorView';
 import { ResponseTimeChart } from './ResponseTimeChart';
 import { apiUrl } from '../apiConfig';
+import { useLanguage } from '../i18n';
 
 interface UrlCheckerProps {
   initialUrl?: string;
@@ -20,6 +21,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
   onAnalysisComplete,
   onCreateMonitorFromAnalysis,
 }) => {
+  const { t, language } = useLanguage();
   const [url, setUrl] = useState(initialUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStage, setCurrentStage] = useState<number>(0);
@@ -27,7 +29,15 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
   const [result, setResult] = useState<DiagnosticAnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ssl' | 'headers' | 'seo' | 'ai'>('overview');
 
-  const stages = [
+  const stages = language === 'hinglish' ? [
+    'Server se connection banaya jaa rha hai...',
+    'HTTP status aur response headers check ho rhe hain...',
+    'SSL/TLS certificate verify ho rha hai...',
+    'Network latency aur TTFB speed naapi jaa rhi hai...',
+    'Security headers ki jaanch ho rhi hai...',
+    'Page HTML aur SEO tags scan ho rhe hain...',
+    'AI Doctor ka prescription generate ho rha hai...',
+  ] : [
     'Connecting to server...',
     'Checking HTTP status & headers...',
     'Inspecting SSL/TLS certificate...',
@@ -88,13 +98,13 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
       >
         <div style={{ maxWidth: '780px', margin: '0 auto', textAlign: 'center' }}>
           <div className="badge badge-info" style={{ marginBottom: '12px' }}>
-            Instant Deep Clinical Scan
+            {t.scannerBadge}
           </div>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
-            Diagnose Any Website in Seconds
+            {t.scannerTitle}
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginBottom: '24px' }}>
-            Enter any public URL to execute live availability, SSL inspection, security header audits, and AI diagnosis.
+            {t.scannerSubtitle}
           </p>
 
           {/* Form Input */}
@@ -104,7 +114,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
               <input
                 type="text"
                 className="input-field"
-                placeholder="https://yourwebsite.com"
+                placeholder={t.scannerPlaceholder}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 style={{ fontSize: '0.95rem', padding: '14px 10px' }}
@@ -119,7 +129,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
               style={{ minWidth: '140px' }}
             >
               {isLoading ? <Loader2 size={18} className="spin" /> : <Activity size={18} />}
-              <span>{isLoading ? 'Analyzing...' : 'Analyze'}</span>
+              <span>{isLoading ? t.scannerAnalyzingBtn : t.scannerAnalyzeBtn}</span>
             </button>
           </form>
 
@@ -166,7 +176,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                 </div>
 
                 <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '14px', letterSpacing: '-0.01em' }}>
-                  Conducting Live Telemetry & Clinical Scan on <span style={{ color: '#38bdf8' }}>{url}</span>
+                  {t.scannerLiveProgress} <span style={{ color: '#38bdf8' }}>{url}</span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>

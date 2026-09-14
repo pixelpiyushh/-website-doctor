@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Shield,
 } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 interface SidebarProps {
   activeView: string;
@@ -35,21 +36,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   totalMonitorsCount,
   ownerProfile,
 }) => {
+  const { t } = useLanguage();
+
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'monitors', label: 'Monitors', icon: Globe, badge: totalMonitorsCount > 0 ? String(totalMonitorsCount) : undefined },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'overview', label: t.navOverview, icon: LayoutDashboard },
+    { id: 'monitors', label: t.navMonitors, icon: Globe, badge: totalMonitorsCount > 0 ? String(totalMonitorsCount) : undefined },
+    { id: 'analytics', label: t.navAnalytics, icon: BarChart3 },
     {
       id: 'incidents',
-      label: 'Incidents',
+      label: t.navIncidents,
       icon: AlertTriangle,
       badge: activeIncidentsCount > 0 ? `${activeIncidentsCount} active` : undefined,
       isAlert: activeIncidentsCount > 0,
     },
-    { id: 'alerts', label: 'Alerts', icon: Bell },
-    { id: 'scanner', label: 'Website Scanner', icon: SearchCode },
-    { id: 'ai-doctor', label: 'AI Doctor', icon: Stethoscope },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'alerts', label: t.navAlerts, icon: Bell },
+    { id: 'scanner', label: t.navScanner, icon: SearchCode },
+    { id: 'ai-doctor', label: t.navAIDoctor, icon: Stethoscope },
+    { id: 'settings', label: t.navSettings, icon: Settings },
   ];
 
   return (
@@ -77,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <nav className="sidebar-nav">
         <div style={{ padding: '8px 12px 4px', fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Platform
+          {t.navPlatform}
         </div>
         {navItems.map((item) => {
           const Icon = item.icon;
