@@ -395,7 +395,13 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient Cosmic Background Orbs */}
+      <div className="cosmic-mesh-bg">
+        <div className="cosmic-orb-purple" style={{ top: '-100px', right: '5%' }} />
+        <div className="cosmic-orb-skyblue" style={{ top: '450px', left: '-50px' }} />
+      </div>
+
       {/* Sidebar Navigation */}
       <Sidebar
         activeView={activeView}
@@ -407,7 +413,7 @@ export const App: React.FC = () => {
         ownerProfile={ownerProfile}
       />
 
-      <div className="main-wrapper">
+      <div className="main-wrapper" style={{ position: 'relative', zIndex: 5 }}>
         {/* Top Navbar */}
         <Navbar
           activeView={activeView}
@@ -432,7 +438,7 @@ export const App: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <h1 className="page-title">Website Doctor Dashboard</h1>
                     {isDemoMode && (
-                      <span className="badge" style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc', border: '1px solid rgba(99, 102, 241, 0.35)', fontSize: '0.74rem' }}>
+                      <span className="badge gradient-badge" style={{ fontSize: '0.74rem' }}>
                         Demo Data
                       </span>
                     )}
@@ -460,7 +466,7 @@ export const App: React.FC = () => {
                       style={{
                         padding: '8px 14px',
                         backgroundColor: 'var(--bg-card)',
-                        border: '1px solid var(--border-medium)',
+                        border: '1px solid rgba(192, 132, 252, 0.3)',
                         borderRadius: 'var(--radius-md)',
                         color: 'var(--text-primary)',
                         fontSize: '0.86rem',
@@ -489,10 +495,10 @@ export const App: React.FC = () => {
               {/* Top 5 Vital Metrics Cards */}
               <div className="grid-4">
                 {/* 1. Status */}
-                <div className="stat-card">
+                <div className="stat-card card-glow-hover">
                   <div className="stat-card-title">
                     <span>Website Status</span>
-                    <Activity size={15} color="var(--accent-primary)" />
+                    <Activity size={15} color="#10b981" />
                   </div>
                   <div className="stat-card-value" style={{ color: selectedMonitor?.status === 'down' ? 'var(--status-down)' : 'var(--status-online)' }}>
                     <span className="pulse-dot" />
@@ -504,14 +510,14 @@ export const App: React.FC = () => {
                 </div>
 
                 {/* 2. Response Time */}
-                <div className="stat-card">
+                <div className="stat-card card-glow-hover" style={{ border: '1px solid rgba(56, 189, 248, 0.25)' }}>
                   <div className="stat-card-title">
                     <span>Response Time</span>
-                    <Zap size={15} color="var(--accent-indigo)" />
+                    <Zap size={15} color="#38bdf8" />
                   </div>
-                  <div className="stat-card-value">
+                  <div className="stat-card-value" style={{ color: '#38bdf8' }}>
                     {historyData.currentResponseTime || selectedMonitor?.latest_response_time || 243}
-                    <span className="stat-card-unit">ms</span>
+                    <span className="stat-card-unit" style={{ color: '#7dd3fc' }}>ms</span>
                   </div>
                   <div className="stat-card-footer">
                     Avg: {historyData.avgResponseTime || 230}ms • P95: {historyData.p95ResponseTime || 310}ms
@@ -519,12 +525,12 @@ export const App: React.FC = () => {
                 </div>
 
                 {/* 3. Rolling Uptime */}
-                <div className="stat-card">
+                <div className="stat-card card-glow-hover" style={{ border: '1px solid rgba(192, 132, 252, 0.25)' }}>
                   <div className="stat-card-title">
                     <span>Rolling Uptime</span>
-                    <Shield size={15} color="var(--status-online)" />
+                    <Shield size={15} color="#c084fc" />
                   </div>
-                  <div className="stat-card-value" style={{ color: 'var(--accent-primary)' }}>
+                  <div className="stat-card-value" style={{ color: '#c084fc' }}>
                     {selectedMonitor?.uptime_pct || 99.98}%
                   </div>
                   <div className="stat-card-footer">
@@ -533,10 +539,10 @@ export const App: React.FC = () => {
                 </div>
 
                 {/* 4. SSL Health */}
-                <div className="stat-card">
+                <div className="stat-card card-glow-hover">
                   <div className="stat-card-title">
                     <span>SSL Certificate</span>
-                    <Lock size={15} color="var(--status-online)" />
+                    <Lock size={15} color="#38bdf8" />
                   </div>
                   <div className="stat-card-value" style={{ fontSize: '1.4rem', color: 'var(--status-online)' }}>
                     Valid

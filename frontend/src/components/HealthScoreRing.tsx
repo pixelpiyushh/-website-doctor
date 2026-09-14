@@ -56,30 +56,92 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
-        {/* Ring Chart */}
-        <div style={{ position: 'relative', width: '130px', height: '130px', flexShrink: 0 }}>
-          <svg width="130" height="130" viewBox="0 0 130 130" style={{ transform: 'rotate(-90deg)' }}>
+        {/* Ring Chart with Circular Motion & Purple/Skyblue Gradient */}
+        <div style={{ position: 'relative', width: '136px', height: '136px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Ambient Circular Glow */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: '-8px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(192, 132, 252, 0.25) 0%, rgba(56, 189, 248, 0.15) 50%, transparent 75%)',
+              filter: 'blur(10px)',
+              pointerEvents: 'none',
+              animation: 'pulse-glow-ring 4s infinite ease-in-out',
+            }}
+          />
+
+          <svg width="136" height="136" viewBox="0 0 136 136" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="scoreRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#c084fc" />
+                <stop offset="50%" stopColor="#818cf8" />
+                <stop offset="100%" stopColor="#38bdf8" />
+              </linearGradient>
+              <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#c084fc" floodOpacity="0.55" />
+              </filter>
+            </defs>
+
+            {/* Rotating Outer Dashed Orbit Ring */}
             <circle
-              cx="65"
-              cy="65"
+              cx="68"
+              cy="68"
+              r="64"
+              fill="none"
+              stroke="rgba(192, 132, 252, 0.3)"
+              strokeWidth="1.5"
+              strokeDasharray="5 5"
+              style={{ transformOrigin: '68px 68px', animation: 'spin-clockwise 25s linear infinite' }}
+            />
+
+            {/* Background Track */}
+            <circle
+              cx="68"
+              cy="68"
               r={radius}
               fill="transparent"
               stroke="var(--border-subtle)"
               strokeWidth="10"
+              transform="rotate(-90 68 68)"
             />
+
+            {/* Progress Stroke with Gradient & Glow */}
             <circle
-              cx="65"
-              cy="65"
+              cx="68"
+              cy="68"
               r={radius}
               fill="transparent"
-              stroke={strokeColor}
+              stroke={overallScore >= 80 ? "url(#scoreRingGradient)" : strokeColor}
               strokeWidth="10"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
+              filter={overallScore >= 80 ? "url(#ringGlow)" : undefined}
+              transform="rotate(-90 68 68)"
               style={{ transition: 'stroke-dashoffset 800ms ease, stroke 400ms ease' }}
             />
           </svg>
+
+          {/* Orbiting Satellite Dot */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '10px',
+              height: '10px',
+              marginTop: '-5px',
+              marginLeft: '-5px',
+              borderRadius: '50%',
+              backgroundColor: '#38bdf8',
+              boxShadow: '0 0 10px #38bdf8, 0 0 16px #c084fc',
+              animation: 'spin-clockwise 6s linear infinite',
+              transformOrigin: '0 54px',
+              pointerEvents: 'none',
+            }}
+          />
+
           <div
             style={{
               position: 'absolute',
@@ -90,10 +152,10 @@ export const HealthScoreRing: React.FC<HealthScoreRingProps> = ({ scoreData }) =
               justifyContent: 'center',
             }}
           >
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '2.1rem', fontWeight: 800, lineHeight: 1, background: 'linear-gradient(135deg, #ffffff 40%, #c084fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {overallScore}
             </span>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.72rem', color: '#c084fc', fontWeight: 700, letterSpacing: '0.05em', marginTop: '3px' }}>
               GRADE {grade}
             </span>
           </div>

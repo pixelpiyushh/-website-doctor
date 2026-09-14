@@ -144,22 +144,31 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
             </div>
           )}
 
-          {/* Realistic Progress Stages */}
+          {/* Realistic Progress Stages with High-Tech Circular Radar Scanner */}
           {isLoading && (
             <div
               style={{
-                marginTop: '20px',
-                padding: '16px 20px',
-                backgroundColor: 'var(--bg-app)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-subtle)',
-                textAlign: 'left',
+                marginTop: '24px',
+                padding: '24px',
+                backgroundColor: 'rgba(11, 13, 19, 0.95)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid rgba(192, 132, 252, 0.35)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 25px rgba(192, 132, 252, 0.15)',
+                textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px' }}>
-                Analyzing {url}...
+              {/* Circular Radar Scanner */}
+              <div className="radar-scanner-wrapper">
+                <div className="radar-beam" />
+                <div className="radar-sonar-ring" />
+                <Activity size={28} style={{ color: '#38bdf8', zIndex: 5, animation: 'pulse 1.8s infinite ease-in-out' }} />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '14px', letterSpacing: '-0.01em' }}>
+                Conducting Live Telemetry & Clinical Scan on <span style={{ color: '#38bdf8' }}>{url}</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
                 {stages.map((st, idx) => {
                   const isDone = currentStage > idx;
                   const isCurrent = currentStage === idx;
@@ -169,19 +178,23 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '0.82rem',
-                        color: isDone ? 'var(--status-online)' : isCurrent ? 'var(--text-primary)' : 'var(--text-muted)',
+                        gap: '10px',
+                        fontSize: '0.84rem',
+                        padding: '4px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: isCurrent ? 'rgba(192, 132, 252, 0.1)' : 'transparent',
+                        color: isDone ? '#10b981' : isCurrent ? '#c084fc' : 'var(--text-muted)',
+                        transition: 'all 200ms ease',
                       }}
                     >
                       {isDone ? (
-                        <Check size={14} strokeWidth={3} />
+                        <Check size={15} strokeWidth={3} style={{ color: '#10b981' }} />
                       ) : isCurrent ? (
-                        <Loader2 size={14} className="spin" style={{ color: 'var(--accent-primary)' }} />
+                        <Loader2 size={15} className="spin" style={{ color: '#c084fc' }} />
                       ) : (
-                        <span style={{ width: '14px', height: '14px', display: 'inline-block' }} />
+                        <span style={{ width: '15px', height: '15px', display: 'inline-block' }} />
                       )}
-                      <span>{st}</span>
+                      <span style={{ fontWeight: isCurrent ? 600 : 400 }}>{st}</span>
                     </div>
                   );
                 })}
