@@ -10,6 +10,9 @@ import {
   Settings,
   ExternalLink,
   Shield,
+  ArrowLeftRight,
+  Radio,
+  Link2Off,
 } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
@@ -40,6 +43,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { id: 'overview', label: t.navOverview, icon: LayoutDashboard },
+    { id: 'fleet', label: t.navFleet, icon: Radio },
+    { id: 'scanner', label: t.navScanner, icon: SearchCode },
+    { id: 'compare', label: t.navCompare, icon: ArrowLeftRight },
+    { id: 'broken-links', label: t.navBrokenLinks, icon: Link2Off },
     { id: 'monitors', label: t.navMonitors, icon: Globe, badge: totalMonitorsCount > 0 ? String(totalMonitorsCount) : undefined },
     { id: 'analytics', label: t.navAnalytics, icon: BarChart3 },
     {
@@ -50,7 +57,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       isAlert: activeIncidentsCount > 0,
     },
     { id: 'alerts', label: t.navAlerts, icon: Bell },
-    { id: 'scanner', label: t.navScanner, icon: SearchCode },
     { id: 'ai-doctor', label: t.navAIDoctor, icon: Stethoscope },
     { id: 'settings', label: t.navSettings, icon: Settings },
   ];

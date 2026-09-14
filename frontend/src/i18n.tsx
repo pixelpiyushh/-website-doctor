@@ -10,6 +10,9 @@ export interface Translations {
   navIncidents: string;
   navAlerts: string;
   navScanner: string;
+  navCompare: string;
+  navFleet: string;
+  navBrokenLinks: string;
   navAIDoctor: string;
   navSettings: string;
   navPlatform: string;
@@ -99,6 +102,9 @@ export const translations: Record<Language, Translations> = {
   en: {
     navOverview: 'Overview',
     navMonitors: 'Monitors',
+    navFleet: 'Fleet Dashboard 📡',
+    navCompare: 'Website Compare 🆚',
+    navBrokenLinks: 'Broken Links 🔗',
     navAnalytics: 'Analytics',
     navIncidents: 'Incidents',
     navAlerts: 'Alerts',
@@ -183,6 +189,9 @@ export const translations: Record<Language, Translations> = {
   hinglish: {
     navOverview: 'Overview (Dashboard)',
     navMonitors: 'Monitors (Websites)',
+    navFleet: 'Fleet Dashboard 📡',
+    navCompare: 'Website Compare 🆚',
+    navBrokenLinks: 'Broken Links Scanner 🔗',
     navAnalytics: 'Analytics (Raftaar)',
     navIncidents: 'Incidents (Problems)',
     navAlerts: 'Alerts (Soochna)',

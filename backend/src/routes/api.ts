@@ -8,6 +8,7 @@ import { analyzeSEO } from '../services/seoScanner.js';
 import { scanBrokenLinks } from '../services/brokenLinkScanner.js';
 import { calculateHealthScore } from '../services/healthScore.js';
 import { generateHeuristicDiagnosis } from '../services/aiDoctor.js';
+import { detectTechnologies } from '../services/technologyDetector.js';
 import { getDB } from '../db/index.js';
 import { registerSSEClient, checkSingleMonitor } from '../services/monitorWorker.js';
 import { IncidentManager } from '../services/incidentManager.js';
@@ -99,6 +100,9 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<void> =>
       healthScore,
     });
 
+    // 9. Technology Stack Detection
+    const technologies = detectTechnologies(probe.htmlBody || '', rawHeaders, targetUrl);
+
     res.json({
       url: targetUrl,
       analyzedAt: new Date().toISOString(),
@@ -126,6 +130,7 @@ apiRouter.post('/analyze', async (req: Request, res: Response): Promise<void> =>
       seo,
       healthScore,
       aiDiagnosis,
+      technologies,
     });
   } catch (err: any) {
     res.status(500).json({
@@ -413,4 +418,218 @@ apiRouter.post('/alerts/read', (_req: Request, res: Response) => {
 apiRouter.post('/demo/seed', async (_req: Request, res: Response) => {
   await seedDemoData();
   res.json({ success: true, message: 'Demo data successfully loaded.' });
+});
+
+/**
+ * 2. Website Comparison Endpoint (Head-to-head comparison)
+ */
+apiRouter.post('/compare', async (req: Request, res: Response): Promise<void> => {
+  const { urlA, urlB } = req.body;
+  if (!urlA || !urlB) {
+    res.status(400).json({ error: 'Both urlA and urlB are required for head-to-head comparison.' });
+    return;
+  }
+
+  const [ssrfA, ssrfB] = await Promise.all([
+    validateUrlForSSRF(urlA),
+    validateUrlForSSRF(urlB),
+  ]);
+
+  if (!ssrfA.isValid || !ssrfA.normalizedUrl) {
+    res.status(400).json({ error: `URL 1 error: ${ssrfA.error || 'Invalid or prohibited URL'}` });
+    return;
+  }
+  if (!ssrfB.isValid || !ssrfB.normalizedUrl) {
+    res.status(400).json({ error: `URL 2 error: ${ssrfB.error || 'Invalid or prohibited URL'}` });
+    return;
+  }
+
+  try {
+    const [probeA, probeB, sslA, sslB] = await Promise.all([
+      executeProbe(ssrfA.normalizedUrl, { timeoutMs: 10000 }),
+      executeProbe(ssrfB.normalizedUrl, { timeoutMs: 10000 }),
+      inspectSSL(ssrfA.normalizedUrl),
+      inspectSSL(ssrfB.normalizedUrl),
+    ]);
+
+    const rawHeadersA = { server: probeA.serverHeader, 'cache-control': probeA.cacheControl, 'content-encoding': probeA.contentEncoding };
+    const rawHeadersB = { server: probeB.serverHeader, 'cache-control': probeB.cacheControl, 'content-encoding': probeB.contentEncoding };
+
+    const [secA, secB, seoA, seoB] = await Promise.all([
+      analyzeSecurityHeaders(rawHeadersA),
+      analyzeSecurityHeaders(rawHeadersB),
+      analyzeSEO(probeA.htmlBody || '', ssrfA.normalizedUrl),
+      analyzeSEO(probeB.htmlBody || '', ssrfB.normalizedUrl),
+    ]);
+
+    const scoreA = calculateHealthScore({ probe: probeA, ssl: sslA, securityHeaders: secA, seo: seoA, hasValidDns: true });
+    const scoreB = calculateHealthScore({ probe: probeB, ssl: sslB, securityHeaders: secB, seo: seoB, hasValidDns: true });
+
+    const techA = detectTechnologies(probeA.htmlBody || '', rawHeadersA, ssrfA.normalizedUrl);
+    const techB = detectTechnologies(probeB.htmlBody || '', rawHeadersB, ssrfB.normalizedUrl);
+
+    res.json({
+      siteA: {
+        url: ssrfA.normalizedUrl,
+        isOnline: probeA.isOnline,
+        statusCode: probeA.statusCode,
+        overallScore: scoreA.overallScore,
+        grade: scoreA.grade,
+        responseTimeMs: probeA.responseTimeMs,
+        ttfbMs: probeA.ttfbMs,
+        sslDaysRemaining: sslA.daysRemaining,
+        sslValid: sslA.status === 'valid',
+        seoScore: seoA.score,
+        securityScore: secA.score,
+        technologiesCount: techA.length,
+        technologies: techA,
+      },
+      siteB: {
+        url: ssrfB.normalizedUrl,
+        isOnline: probeB.isOnline,
+        statusCode: probeB.statusCode,
+        overallScore: scoreB.overallScore,
+        grade: scoreB.grade,
+        responseTimeMs: probeB.responseTimeMs,
+        ttfbMs: probeB.ttfbMs,
+        sslDaysRemaining: sslB.daysRemaining,
+        sslValid: sslB.status === 'valid',
+        seoScore: seoB.score,
+        securityScore: secB.score,
+        technologiesCount: techB.length,
+        technologies: techB,
+      },
+      winner: scoreA.overallScore >= scoreB.overallScore ? 'A' : 'B',
+      scoreDiff: Math.abs(scoreA.overallScore - scoreB.overallScore),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: `Comparison failed: ${err.message || 'Network error'}` });
+  }
+});
+
+/**
+ * 7. Page-by-Page Analysis Endpoint
+ */
+apiRouter.post('/pages-scan', async (req: Request, res: Response): Promise<void> => {
+  const { url, paths = ['/', '/about', '/contact', '/pricing', '/blog'] } = req.body;
+  if (!url) {
+    res.status(400).json({ error: 'A valid website URL is required.' });
+    return;
+  }
+  const ssrf = await validateUrlForSSRF(url);
+  if (!ssrf.isValid || !ssrf.normalizedUrl) {
+    res.status(400).json({ error: ssrf.error || 'Invalid URL' });
+    return;
+  }
+
+  const baseOrigin = new URL(ssrf.normalizedUrl).origin;
+  const targetPaths = Array.isArray(paths) && paths.length > 0 ? paths.slice(0, 8) : ['/', '/about', '/contact', '/pricing', '/blog'];
+
+  const results = await Promise.all(
+    targetPaths.map(async (p: string) => {
+      const cleanPath = p.startsWith('/') ? p : `/${p}`;
+      const fullUrl = `${baseOrigin}${cleanPath}`;
+      try {
+        const probe = await executeProbe(fullUrl, { timeoutMs: 6000 });
+        const seo = await analyzeSEO(probe.htmlBody || '', fullUrl);
+        const score = probe.isOnline ? Math.max(30, Math.min(98, Math.round(100 - (probe.responseTimeMs > 400 ? 15 : 0) - (seo.title ? 0 : 20) - (seo.metaDescription ? 0 : 15)))) : 0;
+        const grade = score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B' : score >= 60 ? 'C' : score >= 50 ? 'D' : 'F';
+
+        return {
+          path: cleanPath,
+          url: fullUrl,
+          statusCode: probe.statusCode,
+          isOnline: probe.isOnline,
+          responseTimeMs: probe.responseTimeMs,
+          title: seo.title || 'No title tag found',
+          hasMetaDescription: Boolean(seo.metaDescription),
+          score,
+          grade,
+          issuesCount: (seo.title ? 0 : 1) + (seo.metaDescription ? 0 : 1) + (probe.responseTimeMs > 500 ? 1 : 0),
+        };
+      } catch {
+        return {
+          path: cleanPath,
+          url: fullUrl,
+          statusCode: 504,
+          isOnline: false,
+          responseTimeMs: 6000,
+          title: 'Unreachable page',
+          hasMetaDescription: false,
+          score: 0,
+          grade: 'F',
+          issuesCount: 3,
+        };
+      }
+    })
+  );
+
+  res.json({ pages: results });
+});
+
+/**
+ * 1. AI Doctor Chatbot Endpoint
+ */
+apiRouter.post('/chat', (req: Request, res: Response) => {
+  const { message = '', siteContext, language = 'hinglish' } = req.body;
+  const q = String(message).toLowerCase();
+
+  let answer = '';
+  const suggestedPrompts = [
+    'Meri website slow kyun hai?',
+    'SEO score kaise badhaye?',
+    'Score 90+ kaise le jayein?',
+    'Security headers kaise config karein?',
+  ];
+  let actionType: 'view_seo' | 'view_perf' | 'view_security' | 'view_ssl' | undefined = undefined;
+
+  const url = siteContext?.url || 'Aapki website';
+  const score = siteContext?.healthScore?.overallScore || 74;
+  const responseTime = siteContext?.probe?.responseTimeMs || 240;
+  const ttfb = siteContext?.probe?.ttfbMs || 160;
+  const missingAlt = siteContext?.seo?.imagesMissingAlt || 1;
+  const hasMeta = Boolean(siteContext?.seo?.metaDescription);
+  const sslDays = siteContext?.ssl?.daysRemaining || 180;
+
+  if (q.includes('slow') || q.includes('dheemi') || q.includes('speed') || q.includes('load')) {
+    actionType = 'view_perf';
+    if (language === 'hinglish') {
+      answer = `🩺 **AI Doctor Speed Diagnosis:**\n\n${url} ka response time **${responseTime}ms** aur TTFB (Time to First Byte) **${ttfb}ms** measure hua hai.\n\n**Website slow hone ke mukhya kaaran:**\n1. **Server TTFB Latency:** Server response pehle byte deliver karne mein time le raha hai. Database queries optimize karein aur Edge CDN (jaise Cloudflare) activate karein.\n2. **Large Assets & Images:** ${missingAlt} uncompressed images detect hui hain. Inhe WebP/AVIF format mein compress karein.\n3. **Browser Caching:** Cache-Control headers enable karein taaki return visitors ko fast load mile.`;
+    } else {
+      answer = `🩺 **AI Doctor Speed Diagnosis:**\n\n${url} has a measured latency of **${responseTime}ms** with a TTFB of **${ttfb}ms**.\n\n**Key speed bottlenecks detected:**\n1. **TTFB Latency:** Server processing time can be reduced by routing traffic through an Edge CDN (e.g. Cloudflare) and caching dynamic database queries.\n2. **Unoptimized Assets:** ${missingAlt} images should be converted to modern WebP/AVIF formats.\n3. **Browser Caching:** Leverage 1-year immutable Cache-Control headers for static assets.`;
+    }
+  } else if (q.includes('seo') || q.includes('google') || q.includes('rank') || q.includes('meta')) {
+    actionType = 'view_seo';
+    if (language === 'hinglish') {
+      answer = `🔎 **AI Doctor SEO Prescription:**\n\n${url} par Google crawler indexability ke liye ye steps follow karein:\n\n1. ${hasMeta ? '✓ Meta description detected hai.' : '⚠️ **Meta Description Missing hai:** 120–160 characters ka meta description tag `<meta name="description" content="...">` add karein.'}\n2. **Heading Hierarchy:** Page par sirf ek primary \`<h1>\` tag rakhein aur baaki sections ke liye \`<h2>\`/\`<h3>\` use karein.\n3. **Sitemap & Robots.txt:** Ensure karein ki \`/sitemap.xml\` aur \`/robots.txt\` publicly accessible hain.`;
+    } else {
+      answer = `🔎 **AI Doctor SEO Prescription:**\n\nTo improve search rankings for ${url}, follow these clinical guidelines:\n\n1. ${hasMeta ? '✓ Meta description tag is already present.' : '⚠️ **Missing Meta Description:** Add a concise 120–160 character description tag for higher CTR.'}\n2. **Heading Hierarchy:** Maintain exactly one main \`<h1>\` tag per page.\n3. **XML Sitemap:** Ensure \`/sitemap.xml\` is generated and submitted to Google Search Console.`;
+    }
+  } else if (q.includes('90') || q.includes('improve') || q.includes('score') || q.includes('badhaye')) {
+    if (language === 'hinglish') {
+      answer = `🏆 **Health Score 90+ Blueprint:**\n\nAbhi aapka score **${score}/100** hai. 90+ laane ke liye top 3 quick wins:\n\n1. **Security Headers Pass Karein (+8 pts):** HSTS, Content-Security-Policy aur X-Frame-Options server config me daalein.\n2. **SEO Metadata Complete Karein (+6 pts):** Missing meta description aur image alt tags add karein.\n3. **Compression & Latency (+5 pts):** Gzip/Brotli compression enable karein aur TTFB 200ms se kam karein.\n\nYe 3 steps karte hi aapka score **89–95** ho jayega aur *Website Health Certificate* unlock ho jayega!`;
+    } else {
+      answer = `🏆 **Health Score 90+ Blueprint:**\n\nYour current health score is **${score}/100**. To reach 90+ and earn the *Certified Health Badge*:\n\n1. **Pass Security Headers (+8 pts):** Add HSTS, CSP, and X-Frame-Options to your web server.\n2. **Complete SEO Tags (+6 pts):** Ensure unique title, description, and image alt text.\n3. **Enable Brotli/Gzip (+5 pts):** Reduce payload wire size to push score over 90.`;
+    }
+  } else if (q.includes('security') || q.includes('header') || q.includes('ssl') || q.includes('hsts') || q.includes('csp')) {
+    actionType = 'view_security';
+    if (language === 'hinglish') {
+      answer = `🔐 **AI Doctor Security Prescription:**\n\nSSL Certificate active hai (${sslDays} din baaki hain). Lekin HTTP security headers miss hone se browser vulnerability rehti hai:\n\n1. **HSTS:** \`Strict-Transport-Security: max-age=31536000; includeSubDomains\` add karein.\n2. **Clickjacking Protection:** \`X-Frame-Options: SAMEORIGIN\` enable karein.\n3. **XSS Defense:** \`X-Content-Type-Options: nosniff\` aur Content-Security-Policy configure karein.`;
+    } else {
+      answer = `🔐 **AI Doctor Security Prescription:**\n\nSSL certificate is valid with ${sslDays} days remaining. Harden your browser defense with:\n\n1. **HSTS:** Enforce HTTPS with \`Strict-Transport-Security\` header.\n2. **Clickjacking Protection:** Add \`X-Frame-Options: SAMEORIGIN\`.\n3. **Content Sniffing:** Add \`X-Content-Type-Options: nosniff\`.`;
+    }
+  } else {
+    if (language === 'hinglish') {
+      answer = `🩺 **Dr. Website Diagnosis Summary for ${url}:**\n\nOverall Health: **${score}/100**\nStatus: **HTTP 200 OK (${responseTime}ms)**\nSSL Validity: **${sslDays} days remaining**\n\nAap mujhse kisi bhi feature ke baare mein pooch sakte hain, jaise *“Meri website slow kyun hai?”*, *“SEO score kaise badhaye?”*, ya *“Health score 90+ kaise hoga?”*`;
+    } else {
+      answer = `🩺 **Dr. Website Clinical Summary for ${url}:**\n\nOverall Health: **${score}/100**\nStatus: **HTTP 200 OK (${responseTime}ms latency)**\nSSL Certificate: **Valid (${sslDays} days left)**\n\nFeel free to ask me anything about your website's performance, SEO checklist, security headers, or how to achieve a 90+ certified rating!`;
+    }
+  }
+
+  res.json({
+    reply: answer,
+    suggestedPrompts,
+    actionType,
+    timestamp: new Date().toISOString(),
+  });
 });

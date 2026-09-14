@@ -260,4 +260,98 @@ export interface DiagnosticAnalysisResult {
   seo: SEOReport;
   healthScore: HealthScoreCalculation;
   aiDiagnosis: AIDoctorDiagnosis;
+  technologies?: DetectedTechnology[];
+  pages?: PageAuditResult[];
 }
+
+export interface DetectedTechnology {
+  name: string;
+  category: 'CMS' | 'Framework' | 'Web Server' | 'CDN / Hosting' | 'Analytics' | 'Programming Language' | 'Database' | 'Security';
+  icon?: string;
+  confidence: number; // 0 - 100
+  version?: string;
+  description: string;
+  websiteUrl?: string;
+}
+
+export interface PageAuditResult {
+  path: string;
+  url: string;
+  statusCode: number;
+  isOnline: boolean;
+  responseTimeMs: number;
+  title?: string;
+  hasMetaDescription: boolean;
+  score: number;
+  grade: 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+  issuesCount: number;
+}
+
+export interface WebsiteComparisonItem {
+  url: string;
+  isOnline: boolean;
+  statusCode: number;
+  overallScore: number;
+  grade: string;
+  responseTimeMs: number;
+  ttfbMs: number;
+  sslDaysRemaining: number;
+  sslValid: boolean;
+  seoScore: number;
+  securityScore: number;
+  technologiesCount: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'doctor';
+  text: string;
+  timestamp: string;
+  suggestedPrompts?: string[];
+  actionType?: 'view_seo' | 'view_perf' | 'view_security' | 'view_ssl';
+}
+
+export interface HealthHistoryPoint {
+  date: string;
+  displayDate: string;
+  score: number;
+  grade: string;
+  milestone: string;
+  resolvedIssues: string[];
+}
+
+export interface FixGuideItem {
+  id: string;
+  title: string;
+  category: 'SEO' | 'Security' | 'Performance' | 'SSL' | 'Technical';
+  priority: 'critical' | 'important' | 'good';
+  problemExplanation: string;
+  stepByStep: string[];
+  codeSnippet?: {
+    language: string;
+    title: string;
+    code: string;
+  };
+  verificationTip: string;
+}
+
+export interface PrescriptionData {
+  rxNumber: string;
+  issuedAt: string;
+  websiteUrl: string;
+  overallHealth: number;
+  grade: string;
+  problemsFound: number;
+  criticalCount: number;
+  importantCount: number;
+  recommendedActions: {
+    priority: number;
+    title: string;
+    description: string;
+    targetPillar: string;
+  }[];
+  doctorNotes: string;
+  doctorName: string;
+  doctorRole: string;
+}
+

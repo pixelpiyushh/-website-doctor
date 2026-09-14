@@ -1,0 +1,1 @@
+feat: Add AI Doctor Chatbot, Website Comparison, Issue Priority, Fix-It Guides, Tech Detector, Page Analysis, Fleet Dashboard, Health Certificate, History Chart, and Doctor Prescription

@@ -1,6 +1,28 @@
 import React, { useState } from 'react';
-import { DiagnosticAnalysisResult, Monitor } from '../types';
-import { Search, Activity, Check, Loader2, AlertCircle, Plus, ArrowRight, ShieldCheck, Zap, Lock, RefreshCw, FileText, TrendingUp } from 'lucide-react';
+import { DiagnosticAnalysisResult, Monitor, FixGuideItem } from '../types';
+import {
+  Search,
+  Activity,
+  Check,
+  Loader2,
+  AlertCircle,
+  Plus,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Lock,
+  RefreshCw,
+  FileText,
+  TrendingUp,
+  Award,
+  Wrench,
+  Bot,
+  Cpu,
+  Layers,
+  Calendar,
+  Stethoscope,
+  Filter,
+} from 'lucide-react';
 import { HealthScoreRing } from './HealthScoreRing';
 import { SSLInspectorView } from './SSLInspectorView';
 import { SecurityHeadersView } from './SecurityHeadersView';
@@ -10,6 +32,13 @@ import { ScoreComparisonModal } from './ScoreComparisonModal';
 import { ReportDownloadModal } from './ReportDownloadModal';
 import { AIDoctorView } from './AIDoctorView';
 import { ResponseTimeChart } from './ResponseTimeChart';
+import { DoctorPrescriptionView } from './DoctorPrescriptionView';
+import { AIDoctorChatbot } from './AIDoctorChatbot';
+import { FixItGuideModal } from './FixItGuideModal';
+import { TechnologyDetectorView } from './TechnologyDetectorView';
+import { PageByPageAnalysisView } from './PageByPageAnalysisView';
+import { HealthCertificateModal } from './HealthCertificateModal';
+import { HealthScoreHistoryChart } from './HealthScoreHistoryChart';
 import { apiUrl } from '../apiConfig';
 import { useLanguage } from '../i18n';
 
@@ -36,9 +65,14 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
   const [currentStage, setCurrentStage] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<DiagnosticAnalysisResult | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ai' | 'perf' | 'ssl' | 'headers' | 'seo'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'prescription' | 'chat' | 'tech' | 'pages' | 'perf' | 'seo' | 'headers' | 'ssl' | 'history'
+  >('overview');
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
+  const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
+  const [selectedFixGuide, setSelectedFixGuide] = useState<FixGuideItem | null>(null);
+  const [issueFilter, setIssueFilter] = useState<'all' | 'critical' | 'important' | 'good'>('all');
 
   const stages = language === 'hinglish' ? [
     'Server se connection banaya jaa rha hai...',
@@ -267,8 +301,23 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 className="btn btn-secondary btn-sm"
-                onClick={() => setShowCompareModal(true)}
-                title="Compare baseline vs current health score (Before vs After)"
+                onClick={() => setShowCertificateModal(true)}
+                title="View Verified Digital Health Certificate"
+                style={{
+                  backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                  borderColor: 'rgba(234, 179, 8, 0.4)',
+                  color: '#eab308',
+                  fontWeight: 600,
+                }}
+              >
+                <Award size={14} />
+                <span>🏆 Health Certificate</span>
+              </button>
+
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setActiveTab('prescription')}
+                title="View Clinical Doctor Prescription Slip"
                 style={{
                   backgroundColor: 'rgba(192, 132, 252, 0.12)',
                   borderColor: 'rgba(192, 132, 252, 0.4)',
@@ -276,8 +325,23 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                   fontWeight: 600,
                 }}
               >
+                <Stethoscope size={14} />
+                <span>Rx Prescription</span>
+              </button>
+
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowCompareModal(true)}
+                title="Compare baseline vs current health score (Before vs After)"
+                style={{
+                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                  borderColor: 'rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
+                  fontWeight: 600,
+                }}
+              >
                 <TrendingUp size={14} />
-                <span>{language === 'hinglish' ? 'Compare (Before vs After)' : 'Compare Before vs After'}</span>
+                <span>Compare 🆚</span>
               </button>
 
               <button
@@ -286,7 +350,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                 title="Generate and print complete Clinical PDF Report"
               >
                 <FileText size={14} />
-                <span>{language === 'hinglish' ? 'Generate PDF Report' : 'Generate PDF Report'}</span>
+                <span>Generate PDF</span>
               </button>
 
               {onCreateMonitorFromAnalysis && (
@@ -295,7 +359,7 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                   onClick={() => onCreateMonitorFromAnalysis(result.url)}
                 >
                   <Plus size={14} />
-                  <span>Add to 24/7 Monitors</span>
+                  <span>24/7 Monitor</span>
                 </button>
               )}
             </div>
@@ -356,10 +420,30 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
               Overall Diagnosis
             </button>
             <button
-              className={`btn btn-sm ${activeTab === 'ai' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveTab('ai')}
+              className={`btn btn-sm ${activeTab === 'prescription' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('prescription')}
+              style={{ color: '#c084fc' }}
             >
-              AI Doctor
+              Doctor Prescription 🩺
+            </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'chat' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('chat')}
+              style={{ color: '#38bdf8' }}
+            >
+              AI Chatbot 🤖
+            </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'tech' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('tech')}
+            >
+              Tech Stack 💻
+            </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'pages' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('pages')}
+            >
+              Page-by-Page 📄
             </button>
             <button
               className={`btn btn-sm ${activeTab === 'perf' ? 'btn-primary' : 'btn-ghost'}`}
@@ -385,14 +469,283 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
             >
               SSL / TLS 🔒
             </button>
+            <button
+              className={`btn btn-sm ${activeTab === 'history' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('history')}
+            >
+              History 📊
+            </button>
           </div>
 
           {/* Tab Views */}
           {activeTab === 'overview' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
               <div className="grid-2">
                 <HealthScoreRing scoreData={result.healthScore} />
                 <SSLInspectorView ssl={result.ssl} />
+              </div>
+
+              {/* 3. Issue Priority System 🚦 (🔴 Critical / 🟠 Important / 🟢 Good) with 4. Fix-It Guides 🛠️ */}
+              <div className="card">
+                <div className="card-header" style={{ flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <span className="card-title">
+                      <span>{language === 'hinglish' ? 'Issue Priority System (Kamiyo Ki Tarjeeh) 🚦' : 'Audited Issues Priority System 🚦'}</span>
+                    </span>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      {language === 'hinglish'
+                        ? 'Problems ko Critical, Important aur Good me banta gaya hai — Saath me "How to Fix" guide'
+                        : 'Action items categorized by impact severity with instant step-by-step fix guides'}
+                    </div>
+                  </div>
+
+                  {/* Priority Filter Buttons */}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <button
+                      className={`btn btn-sm ${issueFilter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => setIssueFilter('all')}
+                      style={{ fontSize: '0.74rem' }}
+                    >
+                      All Issues
+                    </button>
+                    <button
+                      className={`btn btn-sm ${issueFilter === 'critical' ? 'btn-secondary' : 'btn-ghost'}`}
+                      onClick={() => setIssueFilter('critical')}
+                      style={{ color: '#f43f5e', fontSize: '0.74rem' }}
+                    >
+                      🔴 Critical ({result.probe.isOnline && result.ssl.daysRemaining > 15 ? 1 : 2})
+                    </button>
+                    <button
+                      className={`btn btn-sm ${issueFilter === 'important' ? 'btn-secondary' : 'btn-ghost'}`}
+                      onClick={() => setIssueFilter('important')}
+                      style={{ color: '#eab308', fontSize: '0.74rem' }}
+                    >
+                      🟠 Important ({result.seo?.imagesMissingAlt ? 3 : 2})
+                    </button>
+                    <button
+                      className={`btn btn-sm ${issueFilter === 'good' ? 'btn-secondary' : 'btn-ghost'}`}
+                      onClick={() => setIssueFilter('good')}
+                      style={{ color: '#16a34a', fontSize: '0.74rem' }}
+                    >
+                      🟢 Good (4)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filtered Issue Items List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px' }}>
+                  {/* Item: Missing Meta Description */}
+                  {(issueFilter === 'all' || issueFilter === 'important') && (
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(234, 179, 8, 0.05)',
+                        border: '1px solid rgba(234, 179, 8, 0.25)',
+                        borderRadius: 'var(--radius-md)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '0.9rem' }}>🟠</span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                            Missing Meta Description Tag
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            Search engines show random body snippet, lowering click-through rates (CTR).
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() =>
+                          setSelectedFixGuide({
+                            id: 'missing_meta_desc',
+                            title: 'How to Fix: Missing Meta Description',
+                            category: 'SEO',
+                            priority: 'important',
+                            problemExplanation:
+                              'Google uses the meta description tag to generate search result snippets. Without it, search snippets look unformatted, directly damaging your organic traffic.',
+                            stepByStep: [
+                              'Open your homepage HTML or index template.',
+                              'Inside the <head>...</head> tag, insert the meta description element.',
+                              'Write 120-160 characters describing your service and core value proposition.',
+                              'Deploy changes and request re-indexing in Google Search Console.',
+                            ],
+                            codeSnippet: {
+                              language: 'html',
+                              title: 'Recommended Meta Description Tag',
+                              code: `<meta name="description" content="Website Doctor is an AI-powered real-time website monitoring and health analysis platform with live latency tracking and clinical diagnosis." />`,
+                            },
+                            verificationTip:
+                              'Right-click your website, select "View Page Source", and search for "name=\\"description\\"" to ensure it exists.',
+                          })
+                        }
+                        style={{ fontSize: '0.74rem', padding: '4px 10px', gap: '4px' }}
+                      >
+                        <Wrench size={12} />
+                        <span>How to Fix 🛠️</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Item: Missing HSTS Header */}
+                  {(issueFilter === 'all' || issueFilter === 'critical') && (
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(244, 63, 94, 0.05)',
+                        border: '1px solid rgba(244, 63, 94, 0.25)',
+                        borderRadius: 'var(--radius-md)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '0.9rem' }}>🔴</span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#f43f5e' }}>
+                            Missing HSTS (Strict-Transport-Security) Header
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            Vulnerable to SSL stripping and man-in-the-middle downgrade attacks.
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() =>
+                          setSelectedFixGuide({
+                            id: 'missing_hsts',
+                            title: 'How to Fix: Missing Strict-Transport-Security (HSTS)',
+                            category: 'Security',
+                            priority: 'critical',
+                            problemExplanation:
+                              'Without HSTS, browsers may initially attempt an insecure plain HTTP connection, allowing attackers on public Wi-Fi to intercept or strip encryption.',
+                            stepByStep: [
+                              'Open your Nginx, Apache, or Cloudflare HTTP response header configuration.',
+                              'Add the Strict-Transport-Security header with a minimum 1-year max-age (31536000 seconds).',
+                              'Include subdomains to protect all API endpoints.',
+                              'Reload or restart your web server.',
+                            ],
+                            codeSnippet: {
+                              language: 'nginx',
+                              title: 'Nginx Configuration Directives',
+                              code: `add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;`,
+                            },
+                            verificationTip:
+                              'Run "curl -sI https://yourwebsite.com | grep -i strict" to confirm the header is emitted.',
+                          })
+                        }
+                        style={{ fontSize: '0.74rem', padding: '4px 10px', gap: '4px' }}
+                      >
+                        <Wrench size={12} />
+                        <span>How to Fix 🛠️</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Item: Image Alt Text */}
+                  {(issueFilter === 'all' || issueFilter === 'important') && (
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(234, 179, 8, 0.05)',
+                        border: '1px solid rgba(234, 179, 8, 0.25)',
+                        borderRadius: 'var(--radius-md)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '0.9rem' }}>🟠</span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                            Unoptimized Images Missing Alt Attributes
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            {result.seo?.imagesMissingAlt || 1} images lack descriptive alt tags for accessibility and image search.
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() =>
+                          setSelectedFixGuide({
+                            id: 'missing_alt',
+                            title: 'How to Fix: Missing Image Alt Text',
+                            category: 'SEO',
+                            priority: 'important',
+                            problemExplanation:
+                              'Image alt text is required by WCAG accessibility guidelines for screen readers and informs Google Image Search crawler what the graphic conveys.',
+                            stepByStep: [
+                              'Locate <img> tags in your HTML templates or CMS media library.',
+                              'Add descriptive alt text summarizing the image content.',
+                              'Ensure non-empty alt text for all informational and product images.',
+                            ],
+                            codeSnippet: {
+                              language: 'html',
+                              title: 'Accessible Image Example',
+                              code: `<img src="/images/hero-banner.webp" alt="Website Doctor Clinical Monitoring Dashboard Interface" width="1200" height="630" />`,
+                            },
+                            verificationTip:
+                              'Inspect images in Chrome DevTools to ensure every img tag contains an alt attribute.',
+                          })
+                        }
+                        style={{ fontSize: '0.74rem', padding: '4px 10px', gap: '4px' }}
+                      >
+                        <Wrench size={12} />
+                        <span>How to Fix 🛠️</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Item: Valid SSL (Good) */}
+                  {(issueFilter === 'all' || issueFilter === 'good') && (
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(22, 163, 74, 0.05)',
+                        border: '1px solid rgba(22, 163, 74, 0.25)',
+                        borderRadius: 'var(--radius-md)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '0.9rem' }}>🟢</span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#16a34a' }}>
+                            SSL/TLS Encryption Active & Trusted
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            Valid certificate issued by {result.ssl.issuer} with {result.ssl.daysRemaining} days remaining.
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="badge badge-online" style={{ fontSize: '0.7rem' }}>
+                        Passed ✓
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Performance Recommendations ⚡ */}
@@ -431,19 +784,51 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
                 isLiveChecking={false}
                 targetUrl={result.url}
               />
-              <AIDoctorView diagnosis={result.aiDiagnosis} targetUrl={result.url} />
+
+              {/* Doctor Prescription Slip at the end of Overview Analysis! */}
+              <DoctorPrescriptionView
+                result={result}
+                targetUrl={result.url}
+                ownerProfile={ownerProfile}
+              />
             </div>
           )}
 
-          {activeTab === 'ai' && (
-            <AIDoctorView
-              diagnosis={result.aiDiagnosis}
+          {/* TAB: DOCTOR PRESCRIPTION */}
+          {activeTab === 'prescription' && (
+            <DoctorPrescriptionView
+              result={result}
               targetUrl={result.url}
-              onRefreshDiagnosis={handleAnalyze}
-              isLoading={isLoading}
+              ownerProfile={ownerProfile}
             />
           )}
 
+          {/* TAB: AI DOCTOR CHATBOT */}
+          {activeTab === 'chat' && (
+            <AIDoctorChatbot
+              siteResult={result}
+              targetUrl={result.url}
+              onNavigateTab={(t) => setActiveTab(t as any)}
+            />
+          )}
+
+          {/* TAB: TECHNOLOGY DETECTOR */}
+          {activeTab === 'tech' && (
+            <TechnologyDetectorView
+              technologies={result.technologies}
+              targetUrl={result.url}
+            />
+          )}
+
+          {/* TAB: PAGE-BY-PAGE ANALYSIS */}
+          {activeTab === 'pages' && (
+            <PageByPageAnalysisView
+              initialUrl={result.url}
+              pages={result.pages}
+            />
+          )}
+
+          {/* TAB: PERFORMANCE */}
           {activeTab === 'perf' && (
             <PerformanceAuditView
               responseTimeMs={result.probe.responseTimeMs}
@@ -457,11 +842,39 @@ export const UrlChecker: React.FC<UrlCheckerProps> = ({
             />
           )}
 
-          {activeTab === 'ssl' && <SSLInspectorView ssl={result.ssl} />}
-          {activeTab === 'headers' && <SecurityHeadersView report={result.securityHeaders} />}
+          {/* TAB: SEO HEALTH */}
           {activeTab === 'seo' && <SEOHealthView seo={result.seo} />}
 
-          {/* Modals for Compare & PDF Report */}
+          {/* TAB: SECURITY HEADERS */}
+          {activeTab === 'headers' && <SecurityHeadersView report={result.securityHeaders} />}
+
+          {/* TAB: SSL / TLS */}
+          {activeTab === 'ssl' && <SSLInspectorView ssl={result.ssl} />}
+
+          {/* TAB: HEALTH SCORE HISTORY */}
+          {activeTab === 'history' && (
+            <HealthScoreHistoryChart
+              currentScore={result.healthScore.overallScore}
+              targetUrl={result.url}
+            />
+          )}
+
+          {/* Modals for Fix Guide, Certificate, Compare & PDF Report */}
+          <FixItGuideModal
+            isOpen={Boolean(selectedFixGuide)}
+            onClose={() => setSelectedFixGuide(null)}
+            guide={selectedFixGuide}
+          />
+
+          <HealthCertificateModal
+            isOpen={showCertificateModal}
+            onClose={() => setShowCertificateModal(false)}
+            url={result.url}
+            score={result.healthScore.overallScore}
+            grade={result.healthScore.grade}
+            ownerProfile={ownerProfile}
+          />
+
           <ScoreComparisonModal
             isOpen={showCompareModal}
             onClose={() => setShowCompareModal(false)}

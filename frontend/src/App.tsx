@@ -46,6 +46,8 @@ import { useLanguage } from './i18n';
 import { PerformanceAuditView } from './components/PerformanceAuditView';
 import { ScoreComparisonModal } from './components/ScoreComparisonModal';
 import { ReportDownloadModal } from './components/ReportDownloadModal';
+import { WebsiteComparisonView } from './components/WebsiteComparisonView';
+import { FleetMonitoringDashboard } from './components/FleetMonitoringDashboard';
 
 export const App: React.FC = () => {
   const { t } = useLanguage();
@@ -820,6 +822,51 @@ export const App: React.FC = () => {
                   });
                 }}
               />
+              <BrokenLinksView initialUrl={selectedMonitor?.url || 'https://example.com'} />
+            </div>
+          )}
+
+          {/* VIEW: FLEET MONITORING DASHBOARD */}
+          {activeView === 'fleet' && (
+            <FleetMonitoringDashboard
+              monitors={monitors}
+              onSelectMonitor={(m) => {
+                setSelectedMonitor(m);
+                setActiveView('overview');
+              }}
+              onAddMonitor={handleCreateMonitor}
+              onCheckNow={handleCheckNow}
+            />
+          )}
+
+          {/* VIEW: WEBSITE COMPARISON */}
+          {activeView === 'compare' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="page-header">
+                <div>
+                  <h1 className="page-title">Website Comparison (Head-to-Head 🆚)</h1>
+                  <p className="page-subtitle">
+                    Enter two website URLs to benchmark their Performance, SEO, Security, and Overall Health Scores side-by-side.
+                  </p>
+                </div>
+              </div>
+              <WebsiteComparisonView
+                initialUrlA={selectedMonitor?.url || 'https://google.com'}
+              />
+            </div>
+          )}
+
+          {/* VIEW: BROKEN LINKS SCANNER */}
+          {activeView === 'broken-links' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="page-header">
+                <div>
+                  <h1 className="page-title">Broken Links Scanner 🔗</h1>
+                  <p className="page-subtitle">
+                    Deep crawl internal and external links across website pages to detect broken 404s, redirect loops, and slow anchors.
+                  </p>
+                </div>
+              </div>
               <BrokenLinksView initialUrl={selectedMonitor?.url || 'https://example.com'} />
             </div>
           )}
